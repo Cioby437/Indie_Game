@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<objects serializationModel="Studio.02.02.00">
+	<object class="AudioFile" id="{8bf64358-ee28-480a-a904-cb7a3cae31f2}">
+		<property name="assetPath">
+			<value>VL_Intro_16.wav</value>
+		</property>
+		<property name="frequencyInKHz">
+			<value>48</value>
+		</property>
+		<property name="channelCount">
+			<value>2</value>
+		</property>
+		<property name="length">
+			<value>7.7740416666666663</value>
+		</property>
+		<relationship name="masterAssetFolder">
+			<destination>{332e601e-d853-442e-88e7-c1fd004587f7}</destination>
+		</relationship>
+	</object>
+</objects>

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<objects serializationModel="Studio.02.02.00">
+	<object class="AudioFile" id="{fb9eabde-2e5c-4408-a686-dd1910869493}">
+		<property name="assetPath">
+			<value>OneShot_4.wav</value>
+		</property>
+		<property name="isStreaming">
+			<value>true</value>
+		</property>
+		<property name="frequencyInKHz">
+			<value>48</value>
+		</property>
+		<property name="channelCount">
+			<value>2</value>
+		</property>
+		<property name="length">
+			<value>35.524041666666669</value>
+		</property>
+		<relationship name="masterAssetFolder">
+			<destination>{332e601e-d853-442e-88e7-c1fd004587f7}</destination>
+		</relationship>
+	</object>
+</objects>

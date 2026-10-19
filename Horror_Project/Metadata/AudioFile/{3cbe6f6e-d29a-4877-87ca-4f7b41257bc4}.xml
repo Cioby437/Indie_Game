@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<objects serializationModel="Studio.02.02.00">
+	<object class="AudioFile" id="{3cbe6f6e-d29a-4877-87ca-4f7b41257bc4}">
+		<property name="assetPath">
+			<value>S_Interactable_2_Device_FALSE_SFX.wav</value>
+		</property>
+		<property name="frequencyInKHz">
+			<value>48</value>
+		</property>
+		<property name="channelCount">
+			<value>2</value>
+		</property>
+		<property name="length">
+			<value>0.71635416666666663</value>
+		</property>
+		<relationship name="masterAssetFolder">
+			<destination>{332e601e-d853-442e-88e7-c1fd004587f7}</destination>
+		</relationship>
+	</object>
+</objects>
