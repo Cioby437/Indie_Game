@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<objects serializationModel="Studio.02.02.00">
+<objects serializationModel="Studio.02.03.00">
 	<object class="Event" id="{dfbc3dfc-26f7-4139-b0c3-be7a25b21314}">
 		<property name="name">
 			<value>S_Interactive_Device_FALSE</value>

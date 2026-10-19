@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<objects serializationModel="Studio.02.02.00">
+<objects serializationModel="Studio.02.03.00">
 	<object class="ParameterPreset" id="{71c79fc6-3749-45b3-a986-d376f39ca50d}">
 		<property name="name">
 			<value>Mute</value>

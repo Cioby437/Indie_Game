@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<objects serializationModel="Studio.02.02.00">
+<objects serializationModel="Studio.02.03.00">
 	<object class="EventFolder" id="{c5d0941f-2698-437e-b72d-3a2a282fc692}">
 		<property name="name">
 			<value>One-Shots</value>

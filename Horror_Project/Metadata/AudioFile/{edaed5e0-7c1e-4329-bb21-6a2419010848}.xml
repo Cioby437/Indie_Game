@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<objects serializationModel="Studio.02.02.00">
+<objects serializationModel="Studio.02.03.00">
 	<object class="AudioFile" id="{edaed5e0-7c1e-4329-bb21-6a2419010848}">
 		<property name="assetPath">
 			<value>VL_Intro_4.wav</value>

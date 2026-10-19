@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<objects serializationModel="Studio.02.02.00">
+<objects serializationModel="Studio.02.03.00">
 	<object class="Event" id="{d7d22582-d096-464d-ae23-a554552787ac}">
 		<property name="name">
 			<value>S_Interactive_Choice_SFX</value>
