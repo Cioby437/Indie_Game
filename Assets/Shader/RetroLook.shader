@@ -40,6 +40,7 @@ Shader "Hidden/Shader/RetroLook"
     TEXTURE2D_X(_MainTex);
 
     float  _PixelSize;
+    float  _Blur;
     float  _ColorSteps;
     float  _Dither;
     float4 _Tint;
@@ -80,6 +81,26 @@ Shader "Hidden/Shader/RetroLook"
         return LOAD_TEXTURE2D_X(_MainTex, c).rgb;
     }
 
+    // Disc blur: golden-angle spiral of taps around the pixel, radius = _Blur screen pixels.
+    float3 LoadBlurred(float2 pixel)
+    {
+        [branch]
+        if (_Blur <= 0.0)
+            return LoadSource(pixel);
+
+        const int   kTaps       = 24;
+        const float kGoldenAngle = 2.39996323;
+
+        float3 sum = LoadSource(pixel);
+        for (int i = 0; i < kTaps; i++)
+        {
+            float r = sqrt((i + 0.5) / kTaps) * _Blur;
+            float a = i * kGoldenAngle;
+            sum += LoadSource(pixel + float2(cos(a), sin(a)) * r);
+        }
+        return sum / (kTaps + 1);
+    }
+
     float4 Frag(Varyings input) : SV_Target
     {
         UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
@@ -96,9 +117,9 @@ Shader "Hidden/Shader/RetroLook"
         float2 fromCenter = uv - 0.5;
         float2 caOffset   = round(fromCenter * 2.0 * _Chromatic) * px;
         float3 col;
-        col.r = LoadSource(center + caOffset).r;
-        col.g = LoadSource(center).g;
-        col.b = LoadSource(center - caOffset).b;
+        col.r = LoadBlurred(center + caOffset).r;
+        col.g = LoadBlurred(center).g;
+        col.b = LoadBlurred(center - caOffset).b;
 
         // Work in gamma space so banding/dither looks like old hardware
         col = LinearToSRGB(saturate(col));
