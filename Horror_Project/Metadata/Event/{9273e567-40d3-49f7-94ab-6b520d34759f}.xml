@@ -92,11 +92,17 @@
 		<property name="isAsync">
 			<value>true</value>
 		</property>
+		<property name="length">
+			<value>0.01</value>
+		</property>
 		<property name="outputFormat">
 			<value>1</value>
 		</property>
 	</object>
 	<object class="EventMixerGroup" id="{e34be77f-86e6-4cfd-b89a-a4773f23d87c}">
+		<property name="volume">
+			<value>4.5</value>
+		</property>
 		<property name="name">
 			<value>Audio 1</value>
 		</property>
@@ -123,35 +129,55 @@
 			<destination>{914fd187-1edb-464a-8b1b-967fc41ffb2b}</destination>
 			<destination>{4a6cfb48-c611-4b39-9ac8-09607d77cf4d}</destination>
 			<destination>{2bb497f5-a123-407a-aa8b-41909d3aa46a}</destination>
+			<destination>{cd7c1bc1-8322-4ca6-bca1-7ecda1369c71}</destination>
+			<destination>{563ebf14-90eb-43ee-a31d-031ed7cfa24e}</destination>
 		</relationship>
 	</object>
 	<object class="MixerBusPanner" id="{61250e3d-9440-45fc-8e52-eb35d7a0035e}" />
 	<object class="MixerBusFader" id="{ba9efefe-c8af-4787-ad61-6ccd2911b5e7}" />
 	<object class="SpatialiserEffect" id="{eac774c5-c96a-446e-9c72-e60a17324bd2}" />
-	<object class="GainEffect" id="{914fd187-1edb-464a-8b1b-967fc41ffb2b}">
-		<property name="gain">
-			<value>10</value>
-		</property>
-	</object>
+	<object class="GainEffect" id="{914fd187-1edb-464a-8b1b-967fc41ffb2b}" />
 	<object class="MixerBusFader" id="{4a6cfb48-c611-4b39-9ac8-09607d77cf4d}" />
 	<object class="MultibandEqEffect" id="{2bb497f5-a123-407a-aa8b-41909d3aa46a}">
 		<property name="filterTypeA">
 			<value>0</value>
 		</property>
 		<property name="filterTypeB">
-			<value>10</value>
+			<value>5</value>
 		</property>
 		<property name="frequencyA">
 			<value>4748.48975</value>
 		</property>
 		<property name="frequencyB">
-			<value>15000</value>
+			<value>1948.19666</value>
 		</property>
 		<property name="qualityA">
 			<value>1.06368971</value>
 		</property>
 		<property name="qualityB">
-			<value>0.359999985</value>
+			<value>0.246517241</value>
+		</property>
+	</object>
+	<object class="DistortionEffect" id="{cd7c1bc1-8322-4ca6-bca1-7ecda1369c71}">
+		<property name="level">
+			<value>0.409999996</value>
+		</property>
+	</object>
+	<object class="CompressorEffect" id="{563ebf14-90eb-43ee-a31d-031ed7cfa24e}">
+		<property name="threshold">
+			<value>-32.5</value>
+		</property>
+		<property name="ratio">
+			<value>4.5999999</value>
+		</property>
+		<property name="attackTime">
+			<value>1.39999998</value>
+		</property>
+		<property name="releaseTime">
+			<value>92</value>
+		</property>
+		<property name="gain">
+			<value>6</value>
 		</property>
 	</object>
 </objects>
