@@ -3270,7 +3270,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: '::'
   activePriority: 10
   animationScript: {fileID: 153944641}
-  drawerAnimationStateName: WoodenTable_03_drawer01|WoodenTable_03_drawer01Action
   bed1Clicked: 0
   bed2Clicked: 0
   casettePlayerInspect: {fileID: 153944644}
@@ -3286,11 +3285,13 @@ MonoBehaviour:
   - {fileID: 1887021434}
   debugRayWidth: 0.01
   dialogueManager: {fileID: 153944640}
+  drawerAnimationStateName: WoodenTable_03_drawer01|WoodenTable_03_drawer01Action
   idleCursor: {fileID: 2800000, guid: f955eaabd1365fa4492a2210defa2ad0, type: 3}
   inactivePriority: 0
   pointingCursor: {fileID: 2800000, guid: 9ad2de50a26b2794997ca26799b669ee, type: 3}
   raycastDistance: 1000
   showDebugRay: 0
+  tvMiniDaw: {fileID: 0}
   windowButton: {fileID: 1158922197}
   mainCamera: {fileID: 380975498}
 --- !u!114 &153944640
@@ -3409,20 +3410,20 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 89601f894c545884a8e88023f3de4d54, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CasettePlayerInspect
+  blurFadeDuration: 0.5
+  blurFalloff: 0.3
   casettePlayer: {fileID: 2012967691}
-  insertClip: {fileID: -623603649343465320, guid: 850dc6a24936ad4498174da2f1eda8c4, type: 3}
   cinemachineBrain: {fileID: 380975495}
+  cornerDistance: 0.4
+  cornerViewportPosition: {x: 0.85, y: 0.18}
+  focusMargin: 0.1
+  insertClip: {fileID: -623603649343465320, guid: 850dc6a24936ad4498174da2f1eda8c4, type: 3}
   inspectDistance: 0.31
   inspectRotation: {x: 0, y: 0, z: 0}
-  moveInDuration: 1
   maxRotationAngle: 60
-  rotationSmoothing: 8
-  cornerViewportPosition: {x: 0.85, y: 0.18}
-  cornerDistance: 0.4
+  moveInDuration: 1
   moveToCornerDuration: 1
-  focusMargin: 0.1
-  blurFalloff: 0.3
-  blurFadeDuration: 0.5
+  rotationSmoothing: 8
 --- !u!1 &154233500
 GameObject:
   m_ObjectHideFlags: 0
@@ -27910,6 +27911,119 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 884420693}
   m_CullTransparentMesh: 1
+--- !u!1 &885311330
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 885311334}
+  - component: {fileID: 885311333}
+  - component: {fileID: 885311332}
+  - component: {fileID: 885311331}
+  m_Layer: 0
+  m_Name: Quad
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!64 &885311331
+MeshCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 885311330}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 5
+  m_Convex: 0
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 10210, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!23 &885311332
+MeshRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 885311330}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_DynamicOccludee: 1
+  m_StaticShadowCaster: 0
+  m_MotionVectors: 1
+  m_LightProbeUsage: 1
+  m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
+  m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
+  m_RenderingLayerMask: 1
+  m_RendererPriority: 0
+  m_Materials:
+  - {fileID: 2100000, guid: 4208720c8e981334d82c380bd240c7fa, type: 2}
+  m_StaticBatchInfo:
+    firstSubMesh: 0
+    subMeshCount: 0
+  m_StaticBatchRoot: {fileID: 0}
+  m_ProbeAnchor: {fileID: 0}
+  m_LightProbeVolumeOverride: {fileID: 0}
+  m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
+  m_PreserveUVs: 0
+  m_IgnoreNormalsForChartDetection: 0
+  m_ImportantGI: 0
+  m_StitchLightmapSeams: 1
+  m_SelectedEditorRenderState: 3
+  m_MinimumChartSize: 4
+  m_AutoUVMaxDistance: 0.5
+  m_AutoUVMaxAngle: 89
+  m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_MaskInteraction: 0
+  m_AdditionalVertexStreams: {fileID: 0}
+--- !u!33 &885311333
+MeshFilter:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 885311330}
+  m_Mesh: {fileID: 10210, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!4 &885311334
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 885311330}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: 0.6397233, z: -0, w: 0.76860535}
+  m_LocalPosition: {x: -0.1933, y: 1.6302, z: 0.4442}
+  m_LocalScale: {x: 0.2934146, y: 0.27582, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 79.542, z: 0}
 --- !u!1 &889445008
 GameObject:
   m_ObjectHideFlags: 0
@@ -29394,6 +29508,7 @@ PrefabInstance:
     - {fileID: 320816910980917172, guid: fef6bfa97553cd14fb0258f9e208232e, type: 3}
     m_RemovedGameObjects:
     - {fileID: 496431800586672232, guid: fef6bfa97553cd14fb0258f9e208232e, type: 3}
+    - {fileID: 7092189223705159991, guid: fef6bfa97553cd14fb0258f9e208232e, type: 3}
     m_AddedGameObjects:
     - targetCorrespondingSourceObject: {fileID: 6404146694799088903, guid: fef6bfa97553cd14fb0258f9e208232e, type: 3}
       insertIndex: -1
@@ -29423,6 +29538,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 850260116463726145, guid: fef6bfa97553cd14fb0258f9e208232e, type: 3}
       insertIndex: -1
       addedObject: {fileID: 315930409}
+    - targetCorrespondingSourceObject: {fileID: 6446557173481440332, guid: fef6bfa97553cd14fb0258f9e208232e, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1990364675}
   m_SourcePrefab: {fileID: 100100000, guid: fef6bfa97553cd14fb0258f9e208232e, type: 3}
 --- !u!4 &958352805 stripped
 Transform:
@@ -43347,6 +43465,66 @@ Transform:
   - {fileID: 371710973}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1990364674 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 6446557173481440332, guid: fef6bfa97553cd14fb0258f9e208232e, type: 3}
+  m_PrefabInstance: {fileID: 958352804}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1990364675
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1990364674}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: abbafe2fb9d542e4f86c68f1e286a5f2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TVMiniDaw
+  backgroundColor:
+    serializedVersion: 2
+    rgba: 4278849028
+  casettePlayerInspect: {fileID: 153944644}
+  dawScreen: {fileID: 885311330}
+  dialogueManager: {fileID: 153944640}
+  invertHorizontal: 0
+  invertVertical: 0
+  keyboardSpeed: 0.25
+  maxHz: 20000
+  minHz: 20
+  notchColor:
+    serializedVersion: 2
+    rgba: 4282173695
+  notchParameter: NotchFreq
+  onEjected:
+    m_PersistentCalls:
+      m_Calls: []
+  onInserted:
+    m_PersistentCalls:
+      m_Calls: []
+  onSolved:
+    m_PersistentCalls:
+      m_Calls: []
+  pitchColor:
+    serializedVersion: 2
+    rgba: 4294942800
+  pitchParameter: Pitch
+  pitchRangeSemitones: 12
+  puzzle: {fileID: 0}
+  raycastCamera: {fileID: 780586223}
+  recorder: {fileID: 2012967700}
+  requireDialogueFinished: 1
+  revealFadeSpeed: 3
+  screenTextureProperty: _UnlitColorMap
+  spectrumColor:
+    serializedVersion: 2
+    rgba: 4288741210
+  textureHeight: 256
+  textureWidth: 512
+  waveformColor:
+    serializedVersion: 2
+    rgba: 4282145310
 --- !u!1001 &2003071059
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -43565,9 +43743,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e166ea64c1cbeb441a8929bbb140044d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Recorder_Script
-  recorderBank: Recorder
-  playbackEmitter: {fileID: 1742658050}
   maxRecordSeconds: 30
+  playbackEmitter: {fileID: 1742658050}
+  recorderBank: Recorder
+  recorderHolder: {fileID: 0}
 --- !u!1 &2027764994
 GameObject:
   m_ObjectHideFlags: 0
@@ -46079,3 +46258,4 @@ SceneRoots:
   - {fileID: 780586224}
   - {fileID: 1661494653}
   - {fileID: 1335692860}
+  - {fileID: 885311334}
