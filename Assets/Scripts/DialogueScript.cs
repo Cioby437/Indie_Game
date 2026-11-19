@@ -184,6 +184,8 @@ public class DialogueManager : MonoBehaviour
         // The entire dialogue array has now been traversed.
         allDialogueTraversed = true;
 
+        Debug.Log("[Dialogue] Dialogue ended: all lines traversed. TV clicks no longer advance dialogue.");
+
         currentDialogueIndex = -1;
     }
 

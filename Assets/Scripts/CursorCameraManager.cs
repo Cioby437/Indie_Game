@@ -43,6 +43,9 @@ public class CursorCameraManager : MonoBehaviour
              "inserts the cassette and opens the mini DAW.")]
     public TVMiniDaw tvMiniDaw;
 
+    [Tooltip("Logs every click: what it hit and why it was ignored. Turn off when everything works.")]
+    public bool debugClicks = true;
+
     [Header("UI")]
     public Button windowButton;
     private CinemachineVirtualCamera bedCamera1;
@@ -192,6 +195,11 @@ public class CursorCameraManager : MonoBehaviour
 
         if (tvCamera.Priority != activePriority)
         {
+            if (debugClicks)
+            {
+                Debug.Log("[TV] First click: switching to the TV camera. Click the TV again to insert the cassette.");
+            }
+
             tvCamera.Priority = activePriority;
 
             if (windowButton != null)
@@ -200,6 +208,20 @@ public class CursorCameraManager : MonoBehaviour
             }
 
             return;
+        }
+
+        if (debugClicks)
+        {
+            Debug.Log("[TV] Second click registered (TV camera already active).");
+
+            if (tvMiniDaw == null)
+            {
+                Debug.LogWarning("[TV] The 'Tv Mini Daw' field on CursorCameraManager is empty, so the cassette can't be inserted.");
+            }
+            else
+            {
+                Debug.Log(tvMiniDaw.DebugStatus());
+            }
         }
 
         // Insert the cassette: the mini DAW takes over the TV.
@@ -212,6 +234,15 @@ public class CursorCameraManager : MonoBehaviour
 
             tvMiniDaw.Insert();
             return;
+        }
+
+        if (tvMiniDaw != null && tvMiniDaw.InsertBlocker != null)
+        {
+            Debug.Log("TV Mini DAW: cassette not inserted because " + tvMiniDaw.InsertBlocker);
+        }
+        else if (tvMiniDaw != null && dialogueManager != null && dialogueManager.IsDialogueActive)
+        {
+            Debug.Log("TV Mini DAW: cassette not inserted because the TV dialogue is playing. Click through it first.");
         }
 
         if (dialogueManager != null)
@@ -251,7 +282,17 @@ public class CursorCameraManager : MonoBehaviour
         if (EventSystem.current != null &&
             EventSystem.current.IsPointerOverGameObject())
         {
+            if (debugClicks)
+            {
+                Debug.Log("[Click] Went to the UI, not the scene.");
+            }
+
             return;
+        }
+
+        if (debugClicks)
+        {
+            Debug.Log("[Click] Target: " + DescribeClickTarget());
         }
 
         // -------------------------------------------------
@@ -858,17 +899,56 @@ public class CursorCameraManager : MonoBehaviour
         return drawerActive || cabinetActive;
     }
 
+    // What the current click would hit, for the debug log.
+    private string DescribeClickTarget()
+    {
+        if (isHoveringCasettePlayer) return "Casette Player";
+        if (isHoveringDrawerCabinet1) return "Drawer Cabinet 1";
+        if (isHoveringWindow) return "Window";
+        if (isHoveringTV) return "TV";
+        if (isHoveringDrawer) return "Drawer";
+        if (isHoveringDoor) return "Door";
+        if (isHoveringBed1) return "Bed 1";
+        if (isHoveringBed2) return "Bed 2";
+
+        if (mainCamera != null && Mouse.current != null)
+        {
+            Ray ray = mainCamera.ScreenPointToRay(Mouse.current.position.ReadValue());
+
+            if (Physics.Raycast(ray, out RaycastHit hit, raycastDistance,
+                    Physics.DefaultRaycastLayers, QueryTriggerInteraction.Collide))
+            {
+                return "nothing clickable (ray hit '" + hit.collider.name + "', tag '" + hit.collider.tag +
+                       "'). If you meant the TV, this object is in front of it or the TV collider isn't tagged C_TV.";
+            }
+        }
+
+        return "nothing (the ray hit no collider).";
+    }
+
     private void LateUpdate()
     {
+        bool clicked = debugClicks && Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame;
+
         // The Casette Player handles the mouse while it is being inspected.
         if (casettePlayerInspect != null && casettePlayerInspect.BlocksInput)
         {
+            if (clicked)
+            {
+                Debug.Log("[Click] Ignored: the Casette Player is being inspected (or this click puts it away).");
+            }
+
             return;
         }
 
         // The mini DAW handles the mouse while the cassette is in the TV.
         if (tvMiniDaw != null && tvMiniDaw.BlocksInput)
         {
+            if (clicked && !tvMiniDaw.IsOpen)
+            {
+                Debug.Log("[Click] Ignored: this click ejected the cassette.");
+            }
+
             return;
         }
 
