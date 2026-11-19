@@ -214,6 +214,15 @@ public class CursorCameraManager : MonoBehaviour
             return;
         }
 
+        if (tvMiniDaw != null && tvMiniDaw.InsertBlocker != null)
+        {
+            Debug.Log("TV Mini DAW: cassette not inserted because " + tvMiniDaw.InsertBlocker);
+        }
+        else if (tvMiniDaw != null && dialogueManager != null && dialogueManager.IsDialogueActive)
+        {
+            Debug.Log("TV Mini DAW: cassette not inserted because the TV dialogue is playing. Click through it first.");
+        }
+
         if (dialogueManager != null)
         {
             dialogueManager.HandleTVClick();

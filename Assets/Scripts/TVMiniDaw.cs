@@ -129,6 +129,21 @@ public class TVMiniDaw : MonoBehaviour
         }
     }
 
+    // Why the cassette can't go in right now (null = it can). Logged when the TV is clicked.
+    public string InsertBlocker
+    {
+        get
+        {
+            if (IsOpen) return "the cassette is already in the TV.";
+            if (recorder == null) return "no Recorder is assigned on TVMiniDaw.";
+            if (casettePlayerInspect != null && !casettePlayerInspect.IsHeld) return "the Casette Player hasn't been picked up from the drawer yet.";
+            if (recorder.IsRecordingNow) return "the recorder is still recording (release R first).";
+            if (!recorder.HasRecording) return "nothing has been recorded yet (hold R, then release).";
+            if (requireDialogueFinished && dialogueManager != null && !dialogueManager.AllDialogueTraversed) return "the TV dialogue isn't finished yet (Require Dialogue Finished is ticked).";
+            return null;
+        }
+    }
+
     public bool IsOpen { get; private set; }
 
     public float NotchHz
