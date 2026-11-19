@@ -31,6 +31,27 @@ public class CutsceneStage : GameStage
     public Transform lookTarget;
     public int activePriority = 100;
 
+    [Header("Dolly camera (the walk to the window)")]
+    [Tooltip("Separate Cinemachine dolly camera that rides its own track from where the player stands up " +
+             "to the window. If empty, the body camera walks the whole way on the walk path.")]
+    public CinemachineVirtualCamera dollyCam;
+    [Tooltip("The dolly track (CinemachineSmoothPath) the dolly camera rides: 0 = standing by the bed, 1 = at the window.")]
+    public CinemachineSmoothPath dollyTrack;
+    [Tooltip("Blend from the body camera onto the dolly camera after standing up.")]
+    public float toDollyBlend = 0.8f;
+
+    [Header("Focus while walking (pulls in and out)")]
+    [Tooltip("Nearest focus distance (m) the eyes pull to.")]
+    public float walkFocusNear = 0.7f;
+    [Tooltip("Farthest focus distance (m).")]
+    public float walkFocusFar = 5f;
+    [Tooltip("How many times the focus goes in and back out during the walk.")]
+    public float walkFocusCycles = 2f;
+    [Tooltip("How strong the depth of field is during the walk (0-1).")]
+    [Range(0f, 1f)] public float walkFocusStrength = 0.9f;
+    [Tooltip("Extra blur when the focus is pulled closest (still groggy).")]
+    [Range(0f, 1f)] public float walkBlurPulse = 0.2f;
+
     [Header("Look points")]
     [Tooltip("Where the eyes go while lying in bed. The first one is the ceiling.")]
     public Transform[] wakeLookPoints = new Transform[0];
@@ -39,7 +60,7 @@ public class CutsceneStage : GameStage
     [Tooltip("Just outside the window: where the player looks while arriving.")]
     public Transform windowLookPoint;
 
-    [Header("Walk path (0 = lying in bed, 1 = at the window)")]
+    [Header("Body camera path (0 = lying in bed, 1 = end of the path)")]
     [Range(0f, 1f)] public float sitUpPathPosition = 0.12f;
     [Range(0f, 1f)] public float standPathPosition = 0.28f;
 
@@ -148,7 +169,7 @@ public class CutsceneStage : GameStage
             rabbit.StartEating();
         }
 
-        SetDolly(0f, 0f);
+        SetDolly(dolly, 0f, 0f);
         PlaceLookTarget(wakeLookPoints.Length > 0 ? wakeLookPoints[0] : getUpLookPoint);
         SetNoise(bodyCam, lyingNoise);
         Live(bodyCam, CinemachineBlendDefinition.Style.Cut, 0f);
@@ -191,14 +212,32 @@ public class CutsceneStage : GameStage
         // ---- 4. sit up, stand up, walk to the window
         SetNoise(bodyCam, walkingNoise);
         StartCoroutine(MoveLookTarget(getUpLookPoint, sitUpTime));
-        yield return DollyTo(sitUpPathPosition, sitUpTime, false);
+        yield return DollyTo(dolly, sitUpPathPosition, sitUpTime, false);
         yield return new WaitForSeconds(0.6f);
         yield return eyes.Blink();
-        yield return DollyTo(standPathPosition, standUpTime, false);
+        yield return DollyTo(dolly, standPathPosition, standUpTime, false);
         yield return new WaitForSeconds(0.4f);
 
         StartCoroutine(MoveLookTarget(windowLookPoint, walkTime * 0.8f));
-        yield return DollyTo(1f, walkTime, true);
+        StartCoroutine(WalkFocus(walkTime));
+
+        CinemachineTrackedDolly walkDolly = dollyCam != null
+            ? dollyCam.GetCinemachineComponent<CinemachineTrackedDolly>()
+            : null;
+
+        if (walkDolly != null)
+        {
+            // Hand over to the dolly camera on its own track.
+            SetDolly(walkDolly, 0f, 0f);
+            dollyCam.LookAt = lookTarget;
+            SetNoise(dollyCam, walkingNoise);
+            Live(dollyCam, CinemachineBlendDefinition.Style.EaseInOut, toDollyBlend);
+            yield return DollyTo(walkDolly, 1f, walkTime, true);
+        }
+        else
+        {
+            yield return DollyTo(dolly, 1f, walkTime, true);
+        }
 
         // ---- 5. at the window: the rabbit
         SetNoise(windowCam, windowNoise);
@@ -258,6 +297,7 @@ public class CutsceneStage : GameStage
         brain.m_DefaultBlend = new CinemachineBlendDefinition(style, time);
 
         SetPriority(bodyCam, cam == bodyCam);
+        SetPriority(dollyCam, cam == dollyCam);
         SetPriority(windowCam, cam == windowCam);
         SetPriority(stepBackCam, cam == stepBackCam);
     }
@@ -276,6 +316,7 @@ public class CutsceneStage : GameStage
         }
 
         SetPriority(bodyCam, false);
+        SetPriority(dollyCam, false);
         SetPriority(windowCam, false);
         SetPriority(stepBackCam, false);
 
@@ -293,19 +334,19 @@ public class CutsceneStage : GameStage
         blendSaved = false;
     }
 
-    private void SetDolly(float position, float bob)
+    private static void SetDolly(CinemachineTrackedDolly d, float position, float bob)
     {
-        if (dolly == null) return;
-        dolly.m_PositionUnits = CinemachinePathBase.PositionUnits.Normalized;
-        dolly.m_PathPosition = position;
-        dolly.m_PathOffset = new Vector3(0f, bob, 0f);
+        if (d == null) return;
+        d.m_PositionUnits = CinemachinePathBase.PositionUnits.Normalized;
+        d.m_PathPosition = position;
+        d.m_PathOffset = new Vector3(0f, bob, 0f);
     }
 
-    private IEnumerator DollyTo(float target, float duration, bool walking)
+    private IEnumerator DollyTo(CinemachineTrackedDolly d, float target, float duration, bool walking)
     {
-        if (dolly == null) yield break;
+        if (d == null) yield break;
 
-        float from = dolly.m_PathPosition;
+        float from = d.m_PathPosition;
 
         for (float t = 0f; t < duration; t += Time.deltaTime)
         {
@@ -317,11 +358,37 @@ public class CutsceneStage : GameStage
                 ? Mathf.Abs(Mathf.Sin(t * stepsPerSecond * Mathf.PI)) * headBobHeight * Mathf.Sin(Mathf.PI * k)
                 : 0f;
 
-            SetDolly(Mathf.Lerp(from, target, eased), bob);
+            SetDolly(d, Mathf.Lerp(from, target, eased), bob);
             yield return null;
         }
 
-        SetDolly(target, 0f);
+        SetDolly(d, target, 0f);
+    }
+
+    // Rack focus while walking: the eyes pull focus close, then far, a few times,
+    // with a little extra blur when focused closest. Restored at the end.
+    private IEnumerator WalkFocus(float duration)
+    {
+        if (eyes == null || duration <= 0f) yield break;
+
+        float savedStrength = eyes.focusStrength;
+        eyes.focusStrength = walkFocusStrength;
+
+        for (float t = 0f; t < duration; t += Time.deltaTime)
+        {
+            float phase = t / duration * walkFocusCycles * Mathf.PI * 2f;
+            float close = 0.5f - 0.5f * Mathf.Cos(phase);              // 0 = far, 1 = near
+            float fade = Mathf.Clamp01(Mathf.Min(t, duration - t) / 0.6f); // ease in/out of the effect
+
+            eyes.focusDistance = Mathf.Lerp(walkFocusFar, walkFocusNear, close);
+            eyes.focusStrength = Mathf.Lerp(0f, walkFocusStrength, fade);
+            eyes.blur = walkBlurPulse * close * close * fade;
+            yield return null;
+        }
+
+        eyes.focusDistance = 0f;
+        eyes.blur = 0f;
+        eyes.focusStrength = savedStrength;
     }
 
     private void PlaceLookTarget(Transform point)

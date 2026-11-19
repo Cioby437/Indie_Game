@@ -43,6 +43,12 @@ public class TV_StartUp_Script : MonoBehaviour
     [Tooltip("Delay after entering play mode before the first spark.")]
     public float startDelay = 5f;
 
+    [Tooltip("Start the TV sequence as soon as play mode starts. Off when the Stages system " +
+             "starts it at the beginning of the Gameplay Loop (calls StartUp()).")]
+    public bool startOnPlay = true;
+
+    private bool startedUp;
+
     private int[] GetShuffledSparkOrder()
     {
         int[] order = new int[sparkEffects.Length];
@@ -130,6 +136,21 @@ public class TV_StartUp_Script : MonoBehaviour
             FMOD_Event2.SetActive(false);
         }
 
+        if (startOnPlay)
+        {
+            StartUp();
+        }
+    }
+
+    // Starts the TV sequence (sparks, then screen, light and sound). Runs once.
+    public void StartUp()
+    {
+        if (startedUp)
+        {
+            return;
+        }
+
+        startedUp = true;
         StartCoroutine(StartUpSequence());
     }
 

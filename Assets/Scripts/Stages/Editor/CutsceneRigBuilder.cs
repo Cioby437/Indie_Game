@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Cinemachine;
 using UnityEditor;
+using UnityEditor.Events;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 
@@ -226,6 +227,9 @@ public static class CutsceneRigBuilder
             notes.Add("WARNING: no CinemachineBrain found. Assign Brain on Stage_Cutscene.");
         }
 
+        notes.Add(SplitWalkOntoDollyCamera(cutscene, rig.transform, noise));
+        notes.Add(WireTvToGameplay(gameplay));
+
         Undo.CollapseUndoOperations(undoGroup);
         EditorSceneManager.MarkSceneDirty(stagesGO.scene);
         Selection.activeGameObject = rig;
@@ -314,6 +318,133 @@ public static class CutsceneRigBuilder
                   ", front legs=" + actor.frontLegs.Length + ", back legs=" + actor.backLegs.Length +
                   ".\nRotate/scale the child '" + instance.name + "' so the rabbit stands on the ground facing Rabbit's blue Z arrow. " +
                   "Then try the poses in play mode: right-click RabbitActor > Preview.");
+    }
+
+    // Stages > Setup > Add Dolly Walk Camera + TV Fix (for a rig that is already built)
+    [MenuItem("Stages/Setup/Add Dolly Walk Camera + TV Fix", false, 62)]
+    private static void UpgradeExistingRig()
+    {
+        CutsceneStage cutscene = Object.FindFirstObjectByType<CutsceneStage>(FindObjectsInactive.Include);
+        GameplayLoopStage gameplay = Object.FindFirstObjectByType<GameplayLoopStage>(FindObjectsInactive.Include);
+
+        if (cutscene == null)
+        {
+            EditorUtility.DisplayDialog("Add Dolly Walk Camera",
+                "No cutscene in this scene. Use Stages > Setup > Build Cutscene Rig In Open Scene first.", "OK");
+            return;
+        }
+
+        Undo.SetCurrentGroupName("Add Dolly Walk Camera + TV Fix");
+        int undoGroup = Undo.GetCurrentGroup();
+
+        Transform rig = cutscene.walkPath != null ? cutscene.walkPath.transform.parent : cutscene.transform;
+        string dollyNote = cutscene.dollyCam != null
+            ? "Dolly camera already set up (" + cutscene.dollyCam.name + "), left as it is."
+            : SplitWalkOntoDollyCamera(cutscene, rig, FindNoiseProfile());
+        string tvNote = WireTvToGameplay(gameplay);
+
+        Undo.CollapseUndoOperations(undoGroup);
+        EditorSceneManager.MarkSceneDirty(cutscene.gameObject.scene);
+        Debug.Log("[Stages] " + dollyNote + "\n[Stages] " + tvNote);
+    }
+
+    // Splits the walk path at the standing point: the body camera keeps lying -> sitting -> standing,
+    // and a new dolly camera rides its own dolly track from standing to the window.
+    private static string SplitWalkOntoDollyCamera(CutsceneStage cutscene, Transform rig, NoiseSettings noise)
+    {
+        CinemachineSmoothPath path = cutscene.walkPath;
+
+        if (path == null || path.m_Waypoints == null || path.m_Waypoints.Length < 4)
+        {
+            return "Walk path missing or too short (needs lying, sitting, standing + the walk); no dolly camera added.";
+        }
+
+        Undo.RecordObject(path, "Add Dolly Walk Camera");
+        Undo.RecordObject(cutscene, "Add Dolly Walk Camera");
+
+        // World positions of the original waypoints.
+        Vector3[] world = new Vector3[path.m_Waypoints.Length];
+        for (int i = 0; i < world.Length; i++)
+        {
+            world[i] = path.transform.TransformPoint(path.m_Waypoints[i].position);
+        }
+
+        // Dolly track: standing (index 2) to the window.
+        GameObject trackGO = new GameObject("CS_DollyTrack");
+        Undo.RegisterCreatedObjectUndo(trackGO, "Add Dolly Walk Camera");
+        trackGO.transform.SetParent(rig, false);
+        CinemachineSmoothPath track = trackGO.AddComponent<CinemachineSmoothPath>();
+        track.m_Waypoints = new CinemachineSmoothPath.Waypoint[world.Length - 2];
+        for (int i = 2; i < world.Length; i++)
+        {
+            track.m_Waypoints[i - 2] = new CinemachineSmoothPath.Waypoint
+            {
+                position = trackGO.transform.InverseTransformPoint(world[i]),
+                roll = 0f
+            };
+        }
+        track.m_Looped = false;
+        track.InvalidateDistanceCache();
+
+        // Body camera path: only getting out of bed.
+        CinemachineSmoothPath.Waypoint[] bed = new CinemachineSmoothPath.Waypoint[3];
+        System.Array.Copy(path.m_Waypoints, bed, 3);
+        path.m_Waypoints = bed;
+        path.InvalidateDistanceCache();
+
+        float d1 = Vector3.Distance(world[0], world[1]);
+        float d2 = Vector3.Distance(world[1], world[2]);
+        if (d1 + d2 > 0.001f)
+        {
+            cutscene.sitUpPathPosition = d1 / (d1 + d2);
+            cutscene.standPathPosition = 1f;
+        }
+
+        // The dolly camera.
+        CinemachineVirtualCamera dollyCam = MakeCam("CS_DollyCam", rig, world[2], 60f, noise, 0.6f);
+        Undo.RegisterCreatedObjectUndo(dollyCam.gameObject, "Add Dolly Walk Camera");
+        CinemachineTrackedDolly dolly = dollyCam.AddCinemachineComponent<CinemachineTrackedDolly>();
+        dolly.m_Path = track;
+        dolly.m_PositionUnits = CinemachinePathBase.PositionUnits.Normalized;
+        dolly.m_PathPosition = 0f;
+        dolly.m_XDamping = 0.2f;
+        dolly.m_YDamping = 0.2f;
+        dolly.m_ZDamping = 0.2f;
+        dollyCam.LookAt = cutscene.lookTarget;
+
+        cutscene.dollyCam = dollyCam;
+        cutscene.dollyTrack = track;
+
+        return "Dolly camera added: CS_DollyCam rides CS_DollyTrack (" + track.m_Waypoints.Length +
+               " points, standing -> window). CS_WalkPath now only gets the player out of bed. " +
+               "Drag CS_DollyTrack's waypoints in the Scene view to shape the walk.";
+    }
+
+    // The TV should only start (sparks, screen, sound) when the Gameplay Loop begins.
+    private static string WireTvToGameplay(GameplayLoopStage gameplay)
+    {
+        TV_StartUp_Script tv = Object.FindFirstObjectByType<TV_StartUp_Script>(FindObjectsInactive.Include);
+
+        if (tv == null || gameplay == null)
+        {
+            return "No TV_StartUp_Script or Gameplay Loop stage found; TV left as it is.";
+        }
+
+        Undo.RecordObject(tv, "Wire TV to Gameplay Loop");
+        tv.startOnPlay = false;
+
+        for (int i = 0; i < gameplay.onEnter.GetPersistentEventCount(); i++)
+        {
+            if (gameplay.onEnter.GetPersistentTarget(i) == tv &&
+                gameplay.onEnter.GetPersistentMethodName(i) == "StartUp")
+            {
+                return "TV already starts with the Gameplay Loop.";
+            }
+        }
+
+        Undo.RecordObject(gameplay, "Wire TV to Gameplay Loop");
+        UnityEventTools.AddPersistentListener(gameplay.onEnter, tv.StartUp);
+        return "TV (" + tv.name + ") now starts when the Gameplay Loop begins, not on play.";
     }
 
     private static string Name(Transform t)
