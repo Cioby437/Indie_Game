@@ -36,8 +36,18 @@ public class RabbitActor : MonoBehaviour
     [Tooltip("Positive angle = body nose-down.")]
     public Vector3 bodyPitchAxis = Vector3.right;
 
-    [Tooltip("If the model doesn't face its local +Z, the yaw (degrees) to correct it.")]
+    [Tooltip("If the model doesn't face its local +Z, the yaw (degrees) to correct it. " +
+             "Easier: rotate the model's child object instead.")]
     public float modelYawOffset = 0f;
+
+    [Header("Animator (optional)")]
+    [Tooltip("If set, these Animator states are played (e.g. eat / run segments cut from the 'Main' clip), " +
+             "and the code adds the head, jaw, ear and snap moves on top.")]
+    public Animator animator;
+    public string eatState = "";
+    public string idleState = "";
+    public string runState = "";
+    public float crossFade = 0.2f;
 
     [Header("Eating")]
     public float eatingHeadPitch = 40f;
@@ -107,6 +117,30 @@ public class RabbitActor : MonoBehaviour
     {
         Transform[] all = GetComponentsInChildren<Transform>(true);
 
+        // Bone names of the Lapifors rabbit rig (Rabbit_Cutscene_Anim.blend).
+        body = body != null ? body : Exact(all, "Body_Spine1");
+        neck = neck != null ? neck : Exact(all, "Body_Neck");
+        head = head != null ? head : Exact(all, "Body_Head");
+        jaw = jaw != null ? jaw : Exact(all, "Body_headbot");
+        earLeft = earLeft != null ? earLeft : Exact(all, "Body_EarL");
+        earRight = earRight != null ? earRight : Exact(all, "Body_EarR");
+
+        if (frontLegs.Length == 0 && Exact(all, "Body_Leftarm") != null)
+        {
+            frontLegs = new[] { Exact(all, "Body_Leftarm"), Exact(all, "Body_Rightarm") };
+        }
+
+        if (backLegs.Length == 0 && Exact(all, "Body_leftthigh") != null)
+        {
+            backLegs = new[] { Exact(all, "Body_leftthigh"), Exact(all, "Body_Rightthigh") };
+        }
+
+        if (animator == null)
+        {
+            animator = GetComponentInChildren<Animator>();
+        }
+
+        // Generic search for other rigs.
         head = head != null ? head : FindBone(all, "head");
         neck = neck != null ? neck : FindBone(all, "neck");
         jaw = jaw != null ? jaw : FindBone(all, "jaw", "mouth", "chin");
@@ -173,12 +207,14 @@ public class RabbitActor : MonoBehaviour
     public void StartEating()
     {
         mode = Mode.Eating;
+        PlayState(eatState);
     }
 
     // Stops eating and lifts its head, looking straight ahead.
     public void LookAhead()
     {
         mode = Mode.Alert;
+        PlayState(idleState);
     }
 
     public IEnumerator Scream(float duration)
@@ -215,6 +251,7 @@ public class RabbitActor : MonoBehaviour
     public IEnumerator RunTo(Vector3 point, float maxTime = 6f)
     {
         mode = Mode.Running;
+        PlayState(runState);
         onStartRun.Invoke();
 
         float end = Time.time + maxTime;
@@ -260,12 +297,28 @@ public class RabbitActor : MonoBehaviour
         foreach (Renderer r in renderers) if (r != null) r.enabled = true;
     }
 
+    private void PlayState(string state)
+    {
+        if (animator != null && animator.isActiveAndEnabled && animator.runtimeAnimatorController != null &&
+            !string.IsNullOrEmpty(state))
+        {
+            animator.CrossFadeInFixedTime(state, crossFade);
+        }
+    }
+
+    // True when an Animator poses the bones every frame; the code then adds its moves on top of that pose.
+    private bool AnimatorDrivesBones
+    {
+        get { return animator != null && animator.isActiveAndEnabled && animator.runtimeAnimatorController != null; }
+    }
+
     // ---------------------------------------------------------------- previews (play mode)
 
     [ContextMenu("Preview: Eat")] private void PreviewEat() { StartEating(); }
     [ContextMenu("Preview: Look Ahead")] private void PreviewAlert() { LookAhead(); }
     [ContextMenu("Preview: Scream")] private void PreviewScream() { StartCoroutine(Scream(2f)); }
     [ContextMenu("Preview: Reset")] private void PreviewReset() { ResetToStart(); }
+    [ContextMenu("Preview: Run 3 m Forward")] private void PreviewRun() { StartCoroutine(RunTo(transform.position + transform.forward * 3f, 3f)); }
 
     // ---------------------------------------------------------------- animation
 
@@ -353,6 +406,11 @@ public class RabbitActor : MonoBehaviour
             return;
         }
 
+        if (AnimatorDrivesBones)
+        {
+            r = bone.localRotation;
+        }
+
         bone.localRotation = r * Quaternion.AngleAxis(degrees, axis.sqrMagnitude > 0f ? axis.normalized : Vector3.right);
     }
 
@@ -392,6 +450,15 @@ public class RabbitActor : MonoBehaviour
     }
 
     // ---------------------------------------------------------------- bone search helpers
+
+    private static Transform Exact(Transform[] all, string boneName)
+    {
+        foreach (Transform t in all)
+        {
+            if (t.name == boneName) return t;
+        }
+        return null;
+    }
 
     private static Transform FindBone(Transform[] all, params string[] keys)
     {

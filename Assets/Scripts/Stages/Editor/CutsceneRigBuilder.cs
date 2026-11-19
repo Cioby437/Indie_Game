@@ -234,6 +234,93 @@ public static class CutsceneRigBuilder
                   "\nNext: adjust CS_WalkPath, the CS_Look_* points and CS_WindowCam in the Scene view, then save the scene.");
     }
 
+    // Stages > Setup > Use Selected Model As Rabbit
+    // Select the imported rabbit model (Project window or scene), then click this.
+    // It goes under a new "Rabbit" object at the placeholder's spot; the placeholder is switched off.
+    // Rotate / scale the model (the child) so it stands on the ground facing the blue Z arrow of "Rabbit".
+    [MenuItem("Stages/Setup/Use Selected Model As Rabbit", false, 61)]
+    private static void UseSelectedModelAsRabbit()
+    {
+        GameObject model = Selection.activeGameObject;
+        CutsceneStage cutscene = Object.FindFirstObjectByType<CutsceneStage>(FindObjectsInactive.Include);
+
+        if (model == null)
+        {
+            EditorUtility.DisplayDialog("Use Selected Model As Rabbit",
+                "Select the imported rabbit model first (e.g. Assets/Models/Rabbit/Rabbit_Cutscene_Anim in the Project window).", "OK");
+            return;
+        }
+
+        if (cutscene == null)
+        {
+            EditorUtility.DisplayDialog("Use Selected Model As Rabbit",
+                "No cutscene in this scene. Use Stages > Setup > Build Cutscene Rig In Open Scene first.", "OK");
+            return;
+        }
+
+        Undo.SetCurrentGroupName("Use Selected Model As Rabbit");
+        int undoGroup = Undo.GetCurrentGroup();
+
+        RabbitActor old = cutscene.rabbit;
+        Transform parent = old != null ? old.transform.parent : cutscene.transform;
+
+        GameObject wrapper = new GameObject("Rabbit");
+        Undo.RegisterCreatedObjectUndo(wrapper, "Use Selected Model As Rabbit");
+        wrapper.transform.SetParent(parent, false);
+        if (old != null) wrapper.transform.SetPositionAndRotation(old.transform.position, old.transform.rotation);
+
+        GameObject instance;
+        if (EditorUtility.IsPersistent(model))
+        {
+            instance = (GameObject)PrefabUtility.InstantiatePrefab(model);
+            Undo.RegisterCreatedObjectUndo(instance, "Use Selected Model As Rabbit");
+            instance.transform.SetParent(wrapper.transform, false);
+            instance.transform.localPosition = Vector3.zero;
+            instance.transform.localRotation = Quaternion.identity;
+        }
+        else
+        {
+            instance = model;
+            Undo.SetTransformParent(instance.transform, wrapper.transform, "Use Selected Model As Rabbit");
+            instance.transform.localPosition = Vector3.zero;
+        }
+
+        RabbitActor actor = Undo.AddComponent<RabbitActor>(wrapper);
+        actor.AutoFindBones();
+
+        if (old != null)
+        {
+            actor.screamEvent = old.screamEvent;
+            Undo.RecordObject(old.gameObject, "Use Selected Model As Rabbit");
+            old.gameObject.SetActive(false);
+        }
+
+        Undo.RecordObject(cutscene, "Use Selected Model As Rabbit");
+        cutscene.rabbit = actor;
+
+        if (cutscene.windowCam != null)
+        {
+            Undo.RecordObject(cutscene.windowCam, "Use Selected Model As Rabbit");
+            cutscene.windowCam.LookAt = wrapper.transform;
+        }
+
+        Undo.CollapseUndoOperations(undoGroup);
+        EditorSceneManager.MarkSceneDirty(wrapper.scene);
+        Selection.activeGameObject = wrapper;
+
+        Debug.Log("[Cutscene] Rabbit model in place. Bones found: " +
+                  "body=" + Name(actor.body) + ", neck=" + Name(actor.neck) + ", head=" + Name(actor.head) +
+                  ", jaw=" + Name(actor.jaw) + ", ears=" + Name(actor.earLeft) + "/" + Name(actor.earRight) +
+                  ", front legs=" + actor.frontLegs.Length + ", back legs=" + actor.backLegs.Length +
+                  ".\nRotate/scale the child '" + instance.name + "' so the rabbit stands on the ground facing Rabbit's blue Z arrow. " +
+                  "Then try the poses in play mode: right-click RabbitActor > Preview.");
+    }
+
+    private static string Name(Transform t)
+    {
+        return t != null ? t.name : "(none)";
+    }
+
     // ---------------------------------------------------------------- helpers
 
     private static CinemachineVirtualCamera MakeCam(string name, Transform parent, Vector3 position, float fov,
