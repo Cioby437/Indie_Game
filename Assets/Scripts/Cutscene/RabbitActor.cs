@@ -36,6 +36,10 @@ public class RabbitActor : MonoBehaviour
     [Tooltip("Positive angle = body nose-down.")]
     public Vector3 bodyPitchAxis = Vector3.right;
 
+    [Tooltip("Snap the bones to the mesh's bind pose (its undeformed shape) on start. " +
+             "Needed for imported models that were saved mid-animation, like the Lapifors rabbit.")]
+    public bool resetToBindPose = true;
+
     [Tooltip("If the model doesn't face its local +Z, the yaw (degrees) to correct it. " +
              "Easier: rotate the model's child object instead.")]
     public float modelYawOffset = 0f;
@@ -99,6 +103,11 @@ public class RabbitActor : MonoBehaviour
 
     private void Awake()
     {
+        if (resetToBindPose)
+        {
+            ResetToBindPose();
+        }
+
         AutoFindBones();
         CaptureRest();
 
@@ -110,6 +119,49 @@ public class RabbitActor : MonoBehaviour
         {
             SnapToGround(0f);
         }
+    }
+
+    // Puts every bone of the skinned mesh back where it was when the mesh was bound to the rig,
+    // so the mesh shows its modelled shape. Right-click the component to do it in edit mode too.
+    [ContextMenu("Reset Bones To Bind Pose")]
+    public void ResetToBindPose()
+    {
+        foreach (SkinnedMeshRenderer smr in GetComponentsInChildren<SkinnedMeshRenderer>(true))
+        {
+            Mesh mesh = smr.sharedMesh;
+            Transform[] bones = smr.bones;
+
+            if (mesh == null || bones == null || mesh.bindposes.Length != bones.Length)
+            {
+                continue;
+            }
+
+            Matrix4x4[] bindposes = mesh.bindposes;
+            Matrix4x4 meshToWorld = smr.transform.localToWorldMatrix;
+
+            // Parents before children, so moving a parent doesn't undo its child.
+            int[] order = new int[bones.Length];
+            for (int i = 0; i < order.Length; i++) order[i] = i;
+            System.Array.Sort(order, (a, b) => Depth(bones[a]).CompareTo(Depth(bones[b])));
+
+            foreach (int i in order)
+            {
+                if (bones[i] == null) continue;
+
+#if UNITY_EDITOR
+                if (!Application.isPlaying) UnityEditor.Undo.RecordObject(bones[i], "Reset Bones To Bind Pose");
+#endif
+                Matrix4x4 world = meshToWorld * bindposes[i].inverse;
+                bones[i].SetPositionAndRotation(world.GetPosition(), world.rotation);
+            }
+        }
+    }
+
+    private static int Depth(Transform t)
+    {
+        int d = 0;
+        for (Transform p = t; p != null; p = p.parent) d++;
+        return d;
     }
 
     [ContextMenu("Find Bones By Name")]
@@ -289,12 +341,24 @@ public class RabbitActor : MonoBehaviour
         mode = Mode.Idle;
         if (renderers == null) renderers = GetComponentsInChildren<Renderer>(true);
         foreach (Renderer r in renderers) if (r != null) r.enabled = false;
+        SetOwnLights(false);
+    }
+
+    // Lights parented to the rabbit (e.g. a soft light so it reads in the dark field) go with it.
+    // Their objects are switched off, so the lights coming back after the blackout don't relight the empty field.
+    private void SetOwnLights(bool on)
+    {
+        foreach (Light l in GetComponentsInChildren<Light>(true))
+        {
+            if (l.gameObject != gameObject) l.gameObject.SetActive(on);
+        }
     }
 
     public void Show()
     {
         if (renderers == null) renderers = GetComponentsInChildren<Renderer>(true);
         foreach (Renderer r in renderers) if (r != null) r.enabled = true;
+        SetOwnLights(true);
     }
 
     private void PlayState(string state)
