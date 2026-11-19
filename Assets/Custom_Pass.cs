@@ -1,3 +1,27 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:7b85d582d9b86f0b669c4c53414f16d0367b4b9c6408a59923246862a20adad6
-size 1063
+using UnityEngine;
+using UnityEngine.Rendering.HighDefinition;
+using UnityEngine.Rendering;
+using UnityEngine.Experimental.Rendering;
+
+class Custom_Pass : CustomPass
+{
+    // It can be used to configure render targets and their clear state. Also to create temporary render target textures.
+    // When empty this render pass will render to the active camera render target.
+    // You should never call CommandBuffer.SetRenderTarget. Instead call <c>ConfigureTarget</c> and <c>ConfigureClear</c>.
+    // The render pipeline will ensure target setup and clearing happens in an performance manner.
+    protected override void Setup(ScriptableRenderContext renderContext, CommandBuffer cmd)
+    {
+        // Setup code here
+    }
+
+    protected override void Execute(CustomPassContext ctx)
+    {
+        // Executed every frame for all the camera inside the pass volume.
+        // The context contains the command buffer to use to enqueue graphics commands.
+    }
+
+    protected override void Cleanup()
+    {
+        // Cleanup code
+    }
+}
