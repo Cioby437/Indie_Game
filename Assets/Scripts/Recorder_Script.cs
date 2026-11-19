@@ -454,6 +454,11 @@ public class Recorder_Script : MonoBehaviour
 
     private void ReleaseRecordedSound()
     {
+        if (recordedSound.hasHandle())
+        {
+            Debug.Log("[Recorder] Previous recording released (a new one replaces it).");
+        }
+
         // Releasing the sound also stops it wherever it is still playing.
         if (recordedSound.hasHandle())
         {
@@ -473,6 +478,8 @@ public class Recorder_Script : MonoBehaviour
         recordedChannels = 0;
         captureBlockCount = 0;
         isRecording = true;
+
+        Debug.Log("[Recorder] Recording started.");
 
         captureDSP.setBypass(false);
     }
@@ -494,6 +501,9 @@ public class Recorder_Script : MonoBehaviour
 
         if (CreateRecordedSound(sampleCount, recordedChannels))
         {
+            Debug.Log("[Recorder] Recording saved: " + recordedLength.ToString("0.00") + " s, " +
+                      recordedSoundChannels + " channel(s), FMOD sound valid: " + recordedSound.hasHandle() + ".");
+
             hasPlayedOnce = false;
 
             PlayRecording();
@@ -519,6 +529,12 @@ public class Recorder_Script : MonoBehaviour
         if (canUseRecorder && Keyboard.current.rKey.wasPressedThisFrame)
         {
             StartRecording();
+        }
+        else if (Keyboard.current.rKey.wasPressedThisFrame)
+        {
+            Debug.Log("[Recorder] R ignored: " +
+                      (InputLocked ? "input is locked (cassette is in the TV)." :
+                                     "the Casette Player hasn't been picked up yet."));
         }
 
         if (isRecording && Keyboard.current.rKey.wasReleasedThisFrame)

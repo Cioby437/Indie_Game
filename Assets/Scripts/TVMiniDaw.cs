@@ -144,6 +144,35 @@ public class TVMiniDaw : MonoBehaviour
         }
     }
 
+    // Full state report for debugging the insert step.
+    public string DebugStatus()
+    {
+        string recorderInfo = recorder == null
+            ? "  Recorder: NOT ASSIGNED on TVMiniDaw\n"
+            : "  Recorder: " + recorder.name + "\n" +
+              "  Has recording (FMOD sound saved): " + recorder.HasRecording + "\n" +
+              "  Recorded length: " + recorder.RecordedLength.ToString("0.00") + " s\n" +
+              "  Recording right now: " + recorder.IsRecordingNow + "\n" +
+              "  Recorder input locked: " + recorder.InputLocked + "\n" +
+              "  Playback event: " + (recorder.PlaybackEvent.IsNull ? "NONE" : recorder.PlaybackEvent.ToString()) + "\n";
+
+        string holderInfo = casettePlayerInspect == null
+            ? "  Casette Player Inspect: not assigned (pick-up not required)\n"
+            : "  Casette Player picked up (held): " + casettePlayerInspect.IsHeld + "\n";
+
+        string dialogueInfo = dialogueManager == null
+            ? "  Dialogue Manager: not assigned on TVMiniDaw\n"
+            : "  Dialogue active: " + dialogueManager.IsDialogueActive +
+              ", all dialogue traversed: " + dialogueManager.AllDialogueTraversed +
+              ", require finished: " + requireDialogueFinished + "\n";
+
+        return "[TV Mini DAW] Status:\n" +
+               recorderInfo + holderInfo + dialogueInfo +
+               "  DAW screen: " + (dawScreen == null ? "NOT ASSIGNED" : dawScreen.name) + "\n" +
+               "  Already open: " + IsOpen + "\n" +
+               "  Can insert: " + CanInsert + (InsertBlocker != null ? " (" + InsertBlocker + ")" : "");
+    }
+
     public bool IsOpen { get; private set; }
 
     public float NotchHz
@@ -197,6 +226,8 @@ public class TVMiniDaw : MonoBehaviour
         {
             casettePlayerInspect.SetHeldVisible(true);
         }
+
+        Debug.Log("[TV Mini DAW] Cassette ejected.");
 
         onEjected.Invoke();
     }
@@ -258,6 +289,8 @@ public class TVMiniDaw : MonoBehaviour
             SetReveal(Solved && puzzle.stayRevealedWhenSolved ? 1f : 0f);
             hidden.start();
         }
+
+        Debug.Log("[TV Mini DAW] Cassette inserted. DAW screen on, recording looping at the TV.");
 
         onInserted.Invoke();
     }
