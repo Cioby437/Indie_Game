@@ -1,3 +1,14 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:f299f72267ef05e6047bce41dce509c260e25c23fe66e9d92bee0cf16cf9a3a1
-size 369
+fileFormatVersion: 2
+guid: 176a42107ce66c44aa74a67424591597
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 145808
+  packageName: Terrain Asset Pack | Terrain Sample
+  packageVersion: 2.1.0
+  assetPath: Assets/TerrainSampleAssets/Prefabs/BushDry_A.prefab
+  uploadId: 998046

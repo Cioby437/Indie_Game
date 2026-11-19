@@ -1,3 +1,14 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:b4140661c322f6b76c889f86f0f5960a4f8f855ea3080e3ef899b147e73562bd
-size 367
+fileFormatVersion: 2
+guid: d9246f89c4014f749b69f6e963372434
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 145808
+  packageName: Terrain Asset Pack | Terrain Sample
+  packageVersion: 2.1.0
+  assetPath: Assets/TerrainSampleAssets/Prefabs/Plant_C.prefab
+  uploadId: 998046

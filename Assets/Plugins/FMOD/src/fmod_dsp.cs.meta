@@ -1,3 +1,17 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:9d9f67a79f9c0439efba9e33a751a4fc349887b863e64cae271accc17bfdca12
-size 408
+fileFormatVersion: 2
+guid: b7b10c26cf550794183b926ffae615a7
+MonoImporter:
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 311497
+  packageName: FMOD for Unity (2.03)
+  packageVersion: 2.03.13
+  assetPath: Assets/Plugins/FMOD/src/fmod_dsp.cs
+  uploadId: 931626

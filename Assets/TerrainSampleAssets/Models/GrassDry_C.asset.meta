@@ -1,3 +1,15 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:a1898a8ce6ffafe8f989cdae083acc6a9481b796f6137dd164d820dca06870ff
-size 402
+fileFormatVersion: 2
+guid: 9a249c33299836d45ae597069d9324e2
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 4300000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 145808
+  packageName: Terrain Asset Pack | Terrain Sample
+  packageVersion: 2.1.0
+  assetPath: Assets/TerrainSampleAssets/Models/GrassDry_C.asset
+  uploadId: 998046

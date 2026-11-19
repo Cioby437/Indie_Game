@@ -1,3 +1,15 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:519aa74d07cbc02093466e81b2e32b89c722a8f9bc90ae78b9660fd0ee00ccf0
-size 427
+fileFormatVersion: 2
+guid: 014d61beb3975e849b26bc42fbf17b42
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 11400000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 145808
+  packageName: Terrain Asset Pack | Terrain Sample
+  packageVersion: 2.1.0
+  assetPath: Assets/TerrainSampleAssets/TerrainBrushes/Terrainstamp_Ridge05_Brush.brush
+  uploadId: 998046

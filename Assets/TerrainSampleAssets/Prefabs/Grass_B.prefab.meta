@@ -1,3 +1,14 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:5e2498bf77f324f53e8d1cca83cdea2d2969ab440f1d44564f9e3b157585a434
-size 367
+fileFormatVersion: 2
+guid: 7b3e6db10d22f504dbc606110b2cb5e7
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 145808
+  packageName: Terrain Asset Pack | Terrain Sample
+  packageVersion: 2.1.0
+  assetPath: Assets/TerrainSampleAssets/Prefabs/Grass_B.prefab
+  uploadId: 998046

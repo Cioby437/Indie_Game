@@ -1,3 +1,15 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:59ec81c3f38a94c20c7c0b041e7c2e2d231441a06146beb888a2bed9354b6b0c
-size 440
+fileFormatVersion: 2
+guid: 0cbb01b61ed524a48a119d81aa262fed
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 8574412962073106934
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 145808
+  packageName: Terrain Asset Pack | Terrain Sample
+  packageVersion: 2.1.0
+  assetPath: Assets/TerrainSampleAssets/TerrainLayers/Grass_Dry_TerrainLayer.terrainlayer
+  uploadId: 998046

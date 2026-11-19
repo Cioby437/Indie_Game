@@ -1,3 +1,15 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:0d9799238fe014f312a29af0f59cb0d69c41aa8e251a0a55e2f4cc93157d7e4c
-size 418
+fileFormatVersion: 2
+guid: a4f9b0b21cfa10140b76854ccb395dcf
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 11400000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 145808
+  packageName: Terrain Asset Pack | Terrain Sample
+  packageVersion: 2.1.0
+  assetPath: Assets/TerrainSampleAssets/Settings/FoliageDiffusionProfile.asset
+  uploadId: 998046

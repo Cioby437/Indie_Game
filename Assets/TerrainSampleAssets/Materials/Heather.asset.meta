@@ -1,3 +1,15 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:eed374c28fa6154e0a7e665d0e7c2c522aac952327f4de1c3731a6f9a5ef7561
-size 402
+fileFormatVersion: 2
+guid: 9ef29f7651a5050409fa9822d6d4f941
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 145808
+  packageName: Terrain Asset Pack | Terrain Sample
+  packageVersion: 2.1.0
+  assetPath: Assets/TerrainSampleAssets/Materials/Heather.asset
+  uploadId: 998046

@@ -1,3 +1,19 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:d604ccedefdc6e7021a988ff60c7fdded61e67c12016f817fe68e3f85fb129ad
-size 460
+fileFormatVersion: 2
+guid: d32cf7c32a3ed8347bac48ef5ed56d82
+timeCreated: 1432775088
+licenseType: Store
+MonoImporter:
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 311497
+  packageName: FMOD for Unity (2.03)
+  packageVersion: 2.03.13
+  assetPath: Assets/Plugins/FMOD/src/Editor/EventCache.cs
+  uploadId: 931626

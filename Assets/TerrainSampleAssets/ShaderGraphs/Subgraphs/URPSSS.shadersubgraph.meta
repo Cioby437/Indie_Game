@@ -1,3 +1,17 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:69cf8db2f22fedbf01fecb065628a214e821b83ef6f44d6c8e5a4b7fb1066ab9
-size 520
+fileFormatVersion: 2
+guid: 9037b993318fb2a46b314bdf87073500
+ScriptedImporter:
+  internalIDToNameTable: []
+  externalObjects: {}
+  serializedVersion: 2
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+  script: {fileID: 11500000, guid: 60072b568d64c40a485e0fc55012dc9f, type: 3}
+AssetOrigin:
+  serializedVersion: 1
+  productId: 145808
+  packageName: Terrain Asset Pack | Terrain Sample
+  packageVersion: 2.1.0
+  assetPath: Assets/TerrainSampleAssets/ShaderGraphs/Subgraphs/URPSSS.shadersubgraph
+  uploadId: 998046

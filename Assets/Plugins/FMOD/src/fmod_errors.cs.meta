@@ -1,3 +1,17 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:700f5d09752351d4af7166cd0fae1b3cbea07d2cda2f0f7128a72ebaf98575b0
-size 411
+fileFormatVersion: 2
+guid: 6e0992509b0077e479d2da05c8f52eb0
+MonoImporter:
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 311497
+  packageName: FMOD for Unity (2.03)
+  packageVersion: 2.03.13
+  assetPath: Assets/Plugins/FMOD/src/fmod_errors.cs
+  uploadId: 931626

@@ -1,3 +1,19 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:96a90dfd815c397b12278d28737fa8d7f24236caeee0a33e78309df5d04d99bd
-size 464
+fileFormatVersion: 2
+guid: 353a9c870c318f74fa5fdcd475129bae
+timeCreated: 1432530253
+licenseType: Store
+MonoImporter:
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 311497
+  packageName: FMOD for Unity (2.03)
+  packageVersion: 2.03.13
+  assetPath: Assets/Plugins/FMOD/src/Editor/SettingsEditor.cs
+  uploadId: 931626

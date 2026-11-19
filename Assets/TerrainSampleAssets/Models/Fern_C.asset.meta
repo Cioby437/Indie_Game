@@ -1,3 +1,15 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:c2c9647d66ef5dbfff2082f92051675d98d82fa42933751852818eaa54d1e6ba
-size 398
+fileFormatVersion: 2
+guid: 19f3cdde7d5104c4da897ac17045ddfd
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 4300000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 145808
+  packageName: Terrain Asset Pack | Terrain Sample
+  packageVersion: 2.1.0
+  assetPath: Assets/TerrainSampleAssets/Models/Fern_C.asset
+  uploadId: 998046

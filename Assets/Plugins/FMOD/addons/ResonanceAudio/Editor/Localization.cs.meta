@@ -1,3 +1,18 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:3054d0ba36a0b3fead8d51be10fff0ba4fb5edcd35b3806ba775719d681bc683
-size 459
+fileFormatVersion: 2
+guid: 6711f1f86af21644c897cc89748266f6
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 311497
+  packageName: FMOD for Unity (2.03)
+  packageVersion: 2.03.13
+  assetPath: Assets/Plugins/FMOD/addons/ResonanceAudio/Editor/Localization.cs
+  uploadId: 931626

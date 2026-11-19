@@ -1,3 +1,14 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:571720b47384f7720f297d94c7d9c9473cc8fa8a06f00c0701a76a3cf4d3a265
-size 370
+fileFormatVersion: 2
+guid: 408677bd09874114a90a745e08fd2112
+TextScriptImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 145808
+  packageName: Terrain Asset Pack | Terrain Sample
+  packageVersion: 2.1.0
+  assetPath: Assets/TerrainSampleAssets/ThirdPartyNotices.txt
+  uploadId: 998046

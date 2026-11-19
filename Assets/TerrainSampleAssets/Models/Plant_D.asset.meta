@@ -1,3 +1,15 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:7b0e4da1efdc7b56ade62a02670f4db4137f9db65e4ff821cc183d8f9e08859a
-size 399
+fileFormatVersion: 2
+guid: 6a7e8cd5e1ea8794c838b902529f257c
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 4300000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 145808
+  packageName: Terrain Asset Pack | Terrain Sample
+  packageVersion: 2.1.0
+  assetPath: Assets/TerrainSampleAssets/Models/Plant_D.asset
+  uploadId: 998046

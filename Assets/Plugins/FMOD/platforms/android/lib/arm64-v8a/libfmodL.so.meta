@@ -1,3 +1,31 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:20e8ea1018cc68c889d320096c6f08c47ffd2ab64b37414855082370fafe3d14
-size 678
+fileFormatVersion: 1
+guid: 6f74d8321b529d948a7672da4ca54356
+PluginImporter:
+  serializedVersion: 1
+  iconMap: {}
+  executionOrder: {}
+  isPreloaded: 0
+  isOverridable: 0
+  platformData:
+    Android:
+      enabled: 1
+      settings:
+        CPU: ARM64
+        Is16KbAligned: true
+    Any:
+      enabled: 0
+      settings: {}
+    Editor:
+      enabled: 0
+      settings:
+        DefaultValueInitialized: true
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 311497
+  packageName: FMOD for Unity (2.03)
+  packageVersion: 2.03.13
+  assetPath: Assets/Plugins/FMOD/platforms/android/lib/arm64-v8a/libfmodL.so
+  uploadId: 931626

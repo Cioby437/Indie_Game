@@ -1,3 +1,14 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:66cdde80b132aaaa5fe6e77bd4675b9f459ecb79059cc17b0624f8ea9fe4d33b
-size 393
+fileFormatVersion: 2
+guid: 44d09cf463b68274884d8a3c8a94e528
+AssemblyDefinitionImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 311497
+  packageName: FMOD for Unity (2.03)
+  packageVersion: 2.03.13
+  assetPath: Assets/Plugins/FMOD/addons/ResonanceAudio/Scripts/FMODUnityResonance.asmdef
+  uploadId: 931626

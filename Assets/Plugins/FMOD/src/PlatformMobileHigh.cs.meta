@@ -1,3 +1,18 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:43bbe715a5280511f02596393da04a4cf1871d0db45e2615a33948f219091181
-size 440
+fileFormatVersion: 2
+guid: 93a382382f106584e8f8f62412fee177
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 311497
+  packageName: FMOD for Unity (2.03)
+  packageVersion: 2.03.13
+  assetPath: Assets/Plugins/FMOD/src/PlatformMobileHigh.cs
+  uploadId: 931626

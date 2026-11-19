@@ -1,3 +1,18 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:a254856424f2a8ed620f00552973eebad02e5619b9ca061076be8611888ac439
-size 444
+fileFormatVersion: 2
+guid: 3349615af02d64e4e8d1026e228c4a25
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 311497
+  packageName: FMOD for Unity (2.03)
+  packageVersion: 2.03.13
+  assetPath: Assets/Plugins/FMOD/src/Editor/FileReorganizer.cs
+  uploadId: 931626

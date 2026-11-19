@@ -1,3 +1,15 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:01fa362ebd4616224976cdf2dbbcd604ad54a2f4db65cdb0e2136ae17e771725
-size 402
+fileFormatVersion: 2
+guid: 238ad6ea99d845f498c3a2334f75358a
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 145808
+  packageName: Terrain Asset Pack | Terrain Sample
+  packageVersion: 2.1.0
+  assetPath: Assets/TerrainSampleAssets/Materials/BushDry.asset
+  uploadId: 998046

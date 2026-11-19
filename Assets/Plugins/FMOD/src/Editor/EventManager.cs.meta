@@ -1,3 +1,19 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:e2d83bddd6d3ea016616305b417b819d6812693ddbaeaa422d859b65525e5c9c
-size 462
+fileFormatVersion: 2
+guid: 1fc38201a5edb994c874a4a61e96053b
+timeCreated: 1432600216
+licenseType: Store
+MonoImporter:
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 311497
+  packageName: FMOD for Unity (2.03)
+  packageVersion: 2.03.13
+  assetPath: Assets/Plugins/FMOD/src/Editor/EventManager.cs
+  uploadId: 931626

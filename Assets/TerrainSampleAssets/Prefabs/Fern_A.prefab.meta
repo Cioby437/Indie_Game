@@ -1,3 +1,14 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:4003e1a133334614cc0cf516675f4c1361b4c8d96eca986268db26ae2c821f78
-size 366
+fileFormatVersion: 2
+guid: 6629880e46886724fa0107d3035304e6
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 145808
+  packageName: Terrain Asset Pack | Terrain Sample
+  packageVersion: 2.1.0
+  assetPath: Assets/TerrainSampleAssets/Prefabs/Fern_A.prefab
+  uploadId: 998046

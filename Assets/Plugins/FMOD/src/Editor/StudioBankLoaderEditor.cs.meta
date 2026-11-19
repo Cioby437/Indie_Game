@@ -1,3 +1,19 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:487c530b965717ce83d6bb6f05bb291ed550759f483824f00601af6633c5c70a
-size 472
+fileFormatVersion: 2
+guid: f7f61e03a350e1e428dba6c562f3d64a
+timeCreated: 1434691856
+licenseType: Store
+MonoImporter:
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 311497
+  packageName: FMOD for Unity (2.03)
+  packageVersion: 2.03.13
+  assetPath: Assets/Plugins/FMOD/src/Editor/StudioBankLoaderEditor.cs
+  uploadId: 931626

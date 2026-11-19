@@ -1,3 +1,19 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:0aa1ed4d96f16e42d05f350329bf80c75342b11c0b6d76c3372f3ca6d0af1919
-size 454
+fileFormatVersion: 2
+guid: eef8d824ea7b63742966aaa0e94ac383
+timeCreated: 1435215721
+licenseType: Store
+MonoImporter:
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: -400
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 311497
+  packageName: FMOD for Unity (2.03)
+  packageVersion: 2.03.13
+  assetPath: Assets/Plugins/FMOD/src/Settings.cs
+  uploadId: 931626

@@ -1,3 +1,18 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:4656892e7ade3ae31efa9bdc6e09aaf543be4b71963f583e805eebfcac807fa9
-size 438
+fileFormatVersion: 2
+guid: 9c13d4e62f5f7b44bb33162cbf29a9f8
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 311497
+  packageName: FMOD for Unity (2.03)
+  packageVersion: 2.03.13
+  assetPath: Assets/Plugins/FMOD/src/AutomatableSlots.cs
+  uploadId: 931626
