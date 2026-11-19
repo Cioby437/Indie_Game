@@ -56,6 +56,42 @@ public class SecretLayerPuzzle : ScriptableObject
         return matchMode == MatchMode.All ? Mathf.Min(f, p) : Mathf.Max(f, p);
     }
 
+    [Header("Screen static hint")]
+    [Tooltip("The TV screen starts to get static this many octaves away from the target frequency.")]
+    public float frequencyHintOctaves = 3f;
+    [Tooltip("The TV screen starts to get static this many semitones away from the target pitch.")]
+    public float pitchHintSemitones = 8f;
+
+    /// 0 = far away, 1 = on target. Wider than Evaluate(), used for the screen static.
+    /// With All, each axis counts for half, so the player can feel progress on one axis
+    /// but only gets the full static when both are right.
+    public float Proximity(float notchHz, float pitchSemitones)
+    {
+        if (!useFrequency && !usePitch) return 0f;
+
+        float f = useFrequency
+            ? Hint(Mathf.Abs(Mathf.Log(notchHz / targetFrequencyHz, 2f)), frequencyToleranceOctaves, frequencyHintOctaves)
+            : 1f;
+        float p = usePitch
+            ? Hint(Mathf.Abs(pitchSemitones - targetPitchSemitones), pitchToleranceSemitones, pitchHintSemitones)
+            : 1f;
+
+        if (matchMode == MatchMode.Any)
+        {
+            return Mathf.Max(useFrequency ? f : 0f, usePitch ? p : 0f);
+        }
+
+        return (f + p) * 0.5f;
+    }
+
+    static float Hint(float distance, float tolerance, float range)
+    {
+        if (distance <= tolerance) return 1f;
+        if (range <= tolerance) return 0f;
+        float t = 1f - Mathf.Clamp01((distance - tolerance) / (range - tolerance));
+        return t * t * (3f - 2f * t); // smoothstep
+    }
+
     static float Score(float distance, float tolerance, float fade)
     {
         if (distance <= tolerance) return 1f;

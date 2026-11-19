@@ -86,6 +86,26 @@ public class TVMiniDaw : MonoBehaviour
 
     public int textureWidth = 512;
     public Color32 waveformColor = new Color32(30, 90, 60, 255);
+
+    [Header("Static (gets worse near the hidden sound)")]
+    [Tooltip("The waveform slowly turns this colour as the player gets close.")]
+    public Color32 closeWaveformColor = new Color32(230, 25, 20, 255);
+    [Tooltip("How fast the colour follows the player's closeness (0-1 per second). Low = slow drift to red.")]
+    public float colourChangeSpeed = 0.35f;
+    [Tooltip("How fast the static/shake follows the player's closeness (0-1 per second).")]
+    public float staticResponseSpeed = 2.5f;
+    [Tooltip("1 = static grows evenly; higher = barely any until close, then violent.")]
+    public float staticCurve = 2f;
+    [Tooltip("Max whole-waveform shake in pixels at full closeness.")]
+    public float maxShakePixels = 18f;
+    [Tooltip("Max random vertical jitter per waveform column, in pixels.")]
+    public float maxWaveJitterPixels = 40f;
+    [Tooltip("Max horizontal tearing of screen rows (VHS tracking), in pixels.")]
+    public int maxRowTearPixels = 60;
+    [Tooltip("Fraction of pixels turned to snow at full closeness.")]
+    [Range(0f, 1f)] public float maxSnowAmount = 0.55f;
+    [Tooltip("Optional FMOD parameter (0-1) on Scriptable_1 that receives the static amount, e.g. to fade in a static noise layer.")]
+    public string staticParameter = "";
     private int ejectedFrame = -1;
 
     // FFT on the playback instance, so the spectrum only shows the recording (after the EQ).
@@ -106,6 +126,9 @@ public class TVMiniDaw : MonoBehaviour
 
     private FMOD.Studio.EventInstance playback;
     private float reveal = 0f;
+    private float staticAmount = 0f;    // 0-1, drives snow/shake/tearing
+    private float colourAmount = 0f;    // 0-1, drives green -> red (slower)
+    private uint noiseState = 2463534242u;
     private MeshCollider screenCollider;
 
     private Texture2D screenTexture;
@@ -255,6 +278,8 @@ public class TVMiniDaw : MonoBehaviour
         IsOpen = true;
         insertedFrame = Time.frameCount;
         reveal = 0f;
+        staticAmount = 0f;
+        colourAmount = 0f;
         holdTimer = 0f;
 
         // The recorder is "inside" the TV now.
@@ -275,7 +300,7 @@ public class TVMiniDaw : MonoBehaviour
         ApplyParameters();
 
         // Hidden layer as a track inside Scriptable_1: start it silent (or revealed if already solved).
-        if (puzzle != null && puzzle.hiddenEvent.IsNull)
+        if (puzzle != null && !UsesSeparateHiddenEvent())
         {
             SetReveal(Solved && puzzle.stayRevealedWhenSolved ? 1f : 0f);
         }
@@ -285,7 +310,7 @@ public class TVMiniDaw : MonoBehaviour
         outputRate = 48000;
         RuntimeManager.CoreSystem.getSoftwareFormat(out outputRate, out _, out _);
 
-        if (puzzle != null && !puzzle.hiddenEvent.IsNull)
+        if (puzzle != null && UsesSeparateHiddenEvent())
         {
             hidden = RuntimeManager.CreateInstance(puzzle.hiddenEvent);
             hidden.set3DAttributes(RuntimeUtils.To3DAttributes(transform));
@@ -350,17 +375,35 @@ public class TVMiniDaw : MonoBehaviour
             pixels[i] = backgroundColor;
         }
 
-        // 1) The recording's waveform (time axis), dim in the background.
+        // 1) The recording's waveform (time axis). Near the hidden sound it shakes,
+        //    distorts and slowly turns red.
         int middle = h / 2;
+        float amount = staticAmount;
+        Color32 waveColour = Color32.Lerp(waveformColor, closeWaveformColor, colourAmount);
+
+        int shakeX = Mathf.RoundToInt(NoiseSigned() * maxShakePixels * amount);
+        int shakeY = Mathf.RoundToInt(NoiseSigned() * maxShakePixels * 0.5f * amount);
+        float ampWobble = 1f + NoiseSigned() * 0.6f * amount;
 
         for (int x = 0; x < w; x++)
         {
-            int y0 = middle + Mathf.RoundToInt(waveMin[x] * (h / 2 - 1));
-            int y1 = middle + Mathf.RoundToInt(waveMax[x] * (h / 2 - 1));
+            int source = Mathf.Clamp(x - shakeX, 0, w - 1);
+            int jitter = Mathf.RoundToInt(NoiseSigned() * maxWaveJitterPixels * amount * amount);
+
+            int y0 = middle + shakeY + jitter + Mathf.RoundToInt(waveMin[source] * ampWobble * (h / 2 - 1));
+            int y1 = middle + shakeY + jitter + Mathf.RoundToInt(waveMax[source] * ampWobble * (h / 2 - 1));
 
             for (int y = y0; y <= y1; y++)
             {
-                Put(x, y, waveformColor);
+                Put(x, y, waveColour);
+            }
+
+            // Ghost copy, like a bad signal.
+            if (amount > 0.3f && Noise01() < amount * 0.5f)
+            {
+                int ghost = Mathf.RoundToInt(amount * 12f);
+                Put(x, y0 - ghost, waveColour);
+                Put(x, y1 + ghost, waveColour);
             }
         }
 
@@ -381,6 +424,9 @@ public class TVMiniDaw : MonoBehaviour
             }
         }
 
+        // Static on top of the picture (the control lines stay readable above it).
+        ApplyStatic();
+
         // 3) Notch (vertical line) and pitch (horizontal line).
         int notchX = Mathf.RoundToInt(notch01 * (w - 1));
 
@@ -400,6 +446,89 @@ public class TVMiniDaw : MonoBehaviour
 
         screenTexture.SetPixels32(pixels);
         screenTexture.Apply(false);
+    }
+
+    // VHS-style row tearing, a rolling bright band and snow. All scale with staticAmount.
+    private void ApplyStatic()
+    {
+        float amount = staticAmount;
+
+        if (amount <= 0.001f)
+        {
+            return;
+        }
+
+        int w = textureWidth;
+        int h = textureHeight;
+
+        // Row tearing: bands of rows slide sideways.
+        int y = 0;
+
+        while (y < h)
+        {
+            int band = 1 + (int)(Noise01() * 12f);
+            int offset = Noise01() < amount * 0.6f
+                ? Mathf.RoundToInt(NoiseSigned() * maxRowTearPixels * amount)
+                : 0;
+
+            for (int row = y; row < Mathf.Min(y + band, h) && offset != 0; row++)
+            {
+                ShiftRow(row, offset);
+            }
+
+            y += band;
+        }
+
+        // Rolling bright band (the picture losing vertical hold).
+        int bandCentre = (int)(Time.time * 90f) % h;
+        int bandHeight = Mathf.RoundToInt(6f + 20f * amount);
+
+        for (int row = bandCentre - bandHeight; row <= bandCentre + bandHeight; row++)
+        {
+            int r = ((row % h) + h) % h;
+            byte lift = (byte)(70f * amount);
+
+            for (int x = 0; x < w; x++)
+            {
+                Color32 c = pixels[r * w + x];
+                pixels[r * w + x] = new Color32(
+                    (byte)Mathf.Min(255, c.r + lift),
+                    (byte)Mathf.Min(255, c.g + lift),
+                    (byte)Mathf.Min(255, c.b + lift), 255);
+            }
+        }
+
+        // Snow.
+        float snowChance = maxSnowAmount * amount;
+
+        for (int i = 0; i < pixels.Length; i++)
+        {
+            if (Noise01() < snowChance)
+            {
+                byte v = (byte)(Noise01() * 255f);
+                pixels[i] = new Color32(v, v, v, 255);
+            }
+        }
+    }
+
+    private Color32[] rowBuffer;
+
+    private void ShiftRow(int row, int offset)
+    {
+        int w = textureWidth;
+
+        if (rowBuffer == null || rowBuffer.Length != w)
+        {
+            rowBuffer = new Color32[w];
+        }
+
+        System.Array.Copy(pixels, row * w, rowBuffer, 0, w);
+
+        for (int x = 0; x < w; x++)
+        {
+            int source = x - offset;
+            pixels[row * w + x] = (source >= 0 && source < w) ? rowBuffer[source] : backgroundColor;
+        }
     }
 
     private string FindTextureProperty(Material material)
@@ -674,6 +803,7 @@ public class TVMiniDaw : MonoBehaviour
         }
 
         UpdatePuzzle();
+        UpdateStatic();
         UpdateFft();
         DrawScreen();
     }
@@ -736,6 +866,74 @@ public class TVMiniDaw : MonoBehaviour
     // =========================================================
     // PUZZLE
     // =========================================================
+
+    // Option B only applies to a *different* event. If the puzzle points at Scriptable_1 itself,
+    // a second copy of the recording would play, so it's treated as Option A (track inside Scriptable_1).
+    private bool UsesSeparateHiddenEvent()
+    {
+        if (puzzle == null || puzzle.hiddenEvent.IsNull)
+        {
+            return false;
+        }
+
+        if (recorder != null && !recorder.PlaybackEvent.IsNull &&
+            puzzle.hiddenEvent.Guid.Equals(recorder.PlaybackEvent.Guid))
+        {
+            if (!warnedSameHiddenEvent)
+            {
+                Debug.LogWarning("[TV Mini DAW] The puzzle's Hidden Event is Scriptable_1 itself. It is ignored: " +
+                                 "the hidden track inside Scriptable_1 is revealed with the '" + puzzle.revealParameter +
+                                 "' parameter. Clear the Hidden Event field on the puzzle asset.");
+                warnedSameHiddenEvent = true;
+            }
+
+            return false;
+        }
+
+        return true;
+    }
+
+    private bool warnedSameHiddenEvent;
+
+    // 0 = far from the hidden sound, 1 = right on it. Drives the static and the red colour.
+    private void UpdateStatic()
+    {
+        float closeness = 0f;
+
+        if (puzzle != null)
+        {
+            closeness = puzzle.Proximity(NotchHz, PitchSemitones);
+
+            if (Solved && puzzle.stayRevealedWhenSolved)
+            {
+                closeness = 1f;
+            }
+        }
+
+        float target = Mathf.Pow(closeness, Mathf.Max(0.01f, staticCurve));
+
+        staticAmount = Mathf.MoveTowards(staticAmount, target, staticResponseSpeed * Time.deltaTime);
+        colourAmount = Mathf.MoveTowards(colourAmount, closeness, colourChangeSpeed * Time.deltaTime);
+
+        if (!string.IsNullOrEmpty(staticParameter) && playback.isValid())
+        {
+            playback.setParameterByName(staticParameter, staticAmount);
+        }
+    }
+
+    // Cheap fast random (xorshift) for per-pixel noise.
+    private float Noise01()
+    {
+        noiseState ^= noiseState << 13;
+        noiseState ^= noiseState >> 17;
+        noiseState ^= noiseState << 5;
+        return (noiseState & 0xFFFFFF) / 16777216f;
+    }
+
+    private float NoiseSigned()
+    {
+        return Noise01() * 2f - 1f;
+    }
 
     private void UpdatePuzzle()
     {
