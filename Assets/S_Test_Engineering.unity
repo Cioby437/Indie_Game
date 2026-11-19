@@ -3291,7 +3291,8 @@ MonoBehaviour:
   pointingCursor: {fileID: 2800000, guid: 9ad2de50a26b2794997ca26799b669ee, type: 3}
   raycastDistance: 1000
   showDebugRay: 0
-  tvMiniDaw: {fileID: 0}
+  tvMiniDaw: {fileID: 1990364675}
+  debugClicks: 1
   windowButton: {fileID: 1158922197}
   mainCamera: {fileID: 380975498}
 --- !u!114 &153944640
@@ -34324,6 +34325,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e1286b68d3806444abeba7285c7d9590, type: 3}
   m_Name: 
   m_EditorClassIdentifier: '::'
+  spawnDelay: {x: 5, y: 10}
   navMeshSurface: {fileID: 2126412350}
   squareMetersPerPatrolPoint: 4
   patrolPointCountLimits: {x: 8, y: 150}
@@ -34349,6 +34351,9 @@ MonoBehaviour:
   playerInterestDuration: {x: 12, y: 25}
   stalkDistance: {x: 3, y: 7}
   stalkWatchDuration: {x: 1.5, y: 4}
+  stalkApproachSpeed: 6
+  stalkApproachAcceleration: 18
+  singleApproachPerInterest: 1
   jumpscareCooldown: {x: 120, y: 240}
   jumpscareChance: 0.15
   jumpscareCheckInterval: 4
@@ -34377,6 +34382,7 @@ MonoBehaviour:
   stayOffChance: 0.2
   stayOffDuration: {x: 2, y: 8}
   drawGizmos: 1
+  logBehaviour: 1
 --- !u!195 &1335692863
 NavMeshAgent:
   m_ObjectHideFlags: 0
@@ -39854,7 +39860,7 @@ MonoBehaviour:
       Data2: 1240940755
       Data3: 1382787988
       Data4: -1619708915
-    Path: event:/Scriptable_1
+    Path: event:/Interactive/Scriptable_1
   Event: 
   EventPlayTrigger: 11
   EventStopTrigger: 12
@@ -43246,6 +43252,9 @@ MonoBehaviour:
     rgba: 4278849028
   casettePlayerInspect: {fileID: 153944644}
   dawScreen: {fileID: 885311330}
+  screenOffColor:
+    serializedVersion: 2
+    rgba: 4278190080
   dialogueManager: {fileID: 153944640}
   invertHorizontal: 0
   invertVertical: 0
@@ -43284,6 +43293,17 @@ MonoBehaviour:
   waveformColor:
     serializedVersion: 2
     rgba: 4282145310
+  closeWaveformColor:
+    serializedVersion: 2
+    rgba: 4279507430
+  colourChangeSpeed: 0.35
+  staticResponseSpeed: 2.5
+  staticCurve: 2
+  maxShakePixels: 18
+  maxWaveJitterPixels: 40
+  maxRowTearPixels: 60
+  maxSnowAmount: 0.55
+  staticParameter: 
 --- !u!1001 &2003071059
 PrefabInstance:
   m_ObjectHideFlags: 0
