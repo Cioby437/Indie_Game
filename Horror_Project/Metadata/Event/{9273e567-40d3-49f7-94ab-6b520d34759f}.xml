@@ -34,7 +34,6 @@
 		<relationship name="parameters">
 			<destination>{ebaaf94e-8f58-44bd-9eaa-23f0452f9e5d}</destination>
 			<destination>{aaf1bb64-757f-4f5e-9fbf-1398715413a8}</destination>
-			<destination>{1a85428d-f7ac-4d0b-b05e-375f44c085da}</destination>
 		</relationship>
 		<relationship name="banks">
 			<destination>{8b63704e-070e-4db0-9b4e-d5423cc5ce1c}</destination>
@@ -79,9 +78,6 @@
 		<relationship name="modules">
 			<destination>{f5414aac-9634-4340-9a7b-53a9c9602ded}</destination>
 		</relationship>
-		<relationship name="markers">
-			<destination>{8f0c548d-da2b-451c-bc4b-33916ee41ca6}</destination>
-		</relationship>
 	</object>
 	<object class="ParameterProxy" id="{ebaaf94e-8f58-44bd-9eaa-23f0452f9e5d}">
 		<relationship name="preset">
@@ -91,11 +87,6 @@
 	<object class="ParameterProxy" id="{aaf1bb64-757f-4f5e-9fbf-1398715413a8}">
 		<relationship name="preset">
 			<destination>{ef818a26-e4f6-4c6c-a0d2-ba348ae62e9f}</destination>
-		</relationship>
-	</object>
-	<object class="ParameterProxy" id="{1a85428d-f7ac-4d0b-b05e-375f44c085da}">
-		<relationship name="preset">
-			<destination>{1c02fd7a-d969-4e42-9199-fc209c3af9f7}</destination>
 		</relationship>
 	</object>
 	<object class="EventMixerMaster" id="{90a402f6-4788-475d-b3ff-cda8add8a4b6}">
@@ -151,20 +142,6 @@
 		</relationship>
 		<relationship name="output">
 			<destination>{90a402f6-4788-475d-b3ff-cda8add8a4b6}</destination>
-		</relationship>
-	</object>
-	<object class="LoopRegion" id="{8f0c548d-da2b-451c-bc4b-33916ee41ca6}">
-		<property name="position">
-			<value>0</value>
-		</property>
-		<property name="length">
-			<value>26.456729166666666</value>
-		</property>
-		<relationship name="timeline">
-			<destination>{081b38ea-a5d6-44f4-b1d4-e44dcb781219}</destination>
-		</relationship>
-		<relationship name="markerTrack">
-			<destination>{ad9935a0-ee14-4f3e-947d-0db310c59a43}</destination>
 		</relationship>
 	</object>
 	<object class="MixerBusEffectChain" id="{772b27d3-e560-4ca4-ba2c-9b8aa455c2b7}">

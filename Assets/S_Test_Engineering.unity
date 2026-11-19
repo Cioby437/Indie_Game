@@ -37324,7 +37324,7 @@ MonoBehaviour:
   emitter: {fileID: 1335692856}
   leftParameter: Distance_L
   listenerCamera: {fileID: 1977073283}
-  maxDistance: 20
+  maxDistance: 16
   minDistance: 0
   player: {fileID: 380975499}
   rightParameter: Distance_R
