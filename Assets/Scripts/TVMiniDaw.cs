@@ -32,8 +32,11 @@ public class TVMiniDaw : MonoBehaviour
 
     [Header("DAW Screen")]
     [Tooltip("A Quad placed just in front of the TV glass (needs a MeshRenderer and a MeshCollider). " +
-             "Keep it disabled: it is switched on while the cassette is inserted.")]
+             "It stays black until the cassette is inserted; its collider is only on while the DAW is open.")]
     public GameObject dawScreen;
+
+    [Tooltip("Colour of the screen while no cassette is inserted.")]
+    public Color32 screenOffColor = new Color32(0, 0, 0, 255);
 
     [Tooltip("Optional. Lets the TV finish its dialogue before the cassette can be inserted.")]
     public DialogueManager dialogueManager;
@@ -106,6 +109,7 @@ public class TVMiniDaw : MonoBehaviour
     private MeshCollider screenCollider;
 
     private Texture2D screenTexture;
+    private bool screenTextureAssigned;
     private float[] spectrum = new float[0];
     private float[] waveMax;
     private float[] waveMin;
@@ -212,10 +216,9 @@ public class TVMiniDaw : MonoBehaviour
             hidden.clearHandle();
         }
 
-        if (dawScreen != null)
-        {
-            dawScreen.SetActive(false);
-        }
+        // Back to a black screen. The quad stays on; only its collider turns off,
+        // so clicks reach the TV behind it again.
+        ShowBlackScreen();
 
         if (recorder != null)
         {
@@ -519,7 +522,8 @@ public class TVMiniDaw : MonoBehaviour
     // SCREEN
     // =========================================================
 
-    private void SetupScreen()
+    // Creates the texture once, puts it on the quad's material and finds the collider.
+    private void PrepareScreen()
     {
         if (screenTexture == null)
         {
@@ -531,20 +535,30 @@ public class TVMiniDaw : MonoBehaviour
             waveMax = new float[textureWidth];
         }
 
-        recorder.GetWaveform(waveMin, waveMax);
-
         if (dawScreen == null)
         {
             Debug.LogWarning("TVMiniDaw: No DAW screen assigned.");
             return;
         }
 
-        dawScreen.SetActive(true);
-        screenCollider = dawScreen.GetComponent<MeshCollider>();
+        if (!dawScreen.activeSelf)
+        {
+            dawScreen.SetActive(true);
+        }
 
         if (screenCollider == null)
         {
-            Debug.LogWarning("TVMiniDaw: The DAW screen needs a MeshCollider for mouse control.");
+            screenCollider = dawScreen.GetComponent<MeshCollider>();
+
+            if (screenCollider == null)
+            {
+                Debug.LogWarning("TVMiniDaw: The DAW screen needs a MeshCollider for mouse control.");
+            }
+        }
+
+        if (screenTextureAssigned)
+        {
+            return;
         }
 
         Renderer screenRenderer = dawScreen.GetComponent<Renderer>();
@@ -557,6 +571,7 @@ public class TVMiniDaw : MonoBehaviour
             if (property != null)
             {
                 material.SetTexture(property, screenTexture);
+                screenTextureAssigned = true;
             }
             else
             {
@@ -564,7 +579,49 @@ public class TVMiniDaw : MonoBehaviour
                                  screenTextureProperty + "'.");
             }
         }
+    }
 
+    // The TV is "off": a plain black screen, and the quad's collider is disabled
+    // so it doesn't catch clicks meant for the TV.
+    private void ShowBlackScreen()
+    {
+        PrepareScreen();
+
+        if (screenCollider != null)
+        {
+            screenCollider.enabled = false;
+        }
+
+        if (screenTexture == null)
+        {
+            return;
+        }
+
+        for (int i = 0; i < pixels.Length; i++)
+        {
+            pixels[i] = screenOffColor;
+        }
+
+        screenTexture.SetPixels32(pixels);
+        screenTexture.Apply(false);
+    }
+
+    // The cassette is in: draw the DAW and let the mouse use the quad.
+    private void SetupScreen()
+    {
+        PrepareScreen();
+
+        if (screenCollider != null)
+        {
+            screenCollider.enabled = true;
+        }
+
+        if (screenTexture == null)
+        {
+            return;
+        }
+
+        recorder.GetWaveform(waveMin, waveMax);
         DrawScreen();
     }
 
@@ -574,10 +631,8 @@ public class TVMiniDaw : MonoBehaviour
 
     private void Start()
     {
-        if (dawScreen != null)
-        {
-            dawScreen.SetActive(false);
-        }
+        // The quad stays visible from the start, as a black (switched off) screen.
+        ShowBlackScreen();
     }
 
     // =========================================================

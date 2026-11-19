@@ -21,6 +21,10 @@ public class Test_InteractiveSoundScript : MonoBehaviour
     // INSPECTOR
     // ---------------------------------------------------------
 
+    [Header("Spawn")]
+    [Tooltip("It stays hidden (disabled, silent) for a random time in this range after play mode starts, then appears.")]
+    [SerializeField] private Vector2 spawnDelay = new Vector2(5f, 10f);
+
     [Header("Patrol Area")]
     [Tooltip("The NavMesh Surface it patrols. Its baked bounds (or its Volume box when Collect Objects = Volume) limit where it goes. " +
              "If empty: a surface on this object, otherwise the active surface matching the agent type.")]
@@ -64,12 +68,18 @@ public class Test_InteractiveSoundScript : MonoBehaviour
     [Tooltip("Optional. If empty, the object with Player_Controller is used.")]
     [SerializeField] private Transform player;
     [Tooltip("Chance (per roll) that it starts paying attention to the player.")]
-    [SerializeField, Range(0f, 1f)] private float playerInterestChance = 0.35f;
-    [SerializeField] private Vector2 playerInterestRollInterval = new Vector2(15f, 30f);
-    [SerializeField] private Vector2 playerInterestDuration = new Vector2(12f, 25f);
+    [SerializeField, Range(0f, 1f)] private float playerInterestChance = 0.25f;
+    [SerializeField] private Vector2 playerInterestRollInterval = new Vector2(30f, 60f);
+    [SerializeField] private Vector2 playerInterestDuration = new Vector2(8f, 15f);
     [Tooltip("Stays this far from the player while stalking (min / max).")]
-    [SerializeField] private Vector2 stalkDistance = new Vector2(3f, 7f);
-    [SerializeField] private Vector2 stalkWatchDuration = new Vector2(1.5f, 4f);
+    [SerializeField] private Vector2 stalkDistance = new Vector2(4f, 8f);
+    [SerializeField] private Vector2 stalkWatchDuration = new Vector2(1f, 3f);
+    [Tooltip("Speed when it decides to move toward the player (much faster than walking).")]
+    [SerializeField] private float stalkApproachSpeed = 6f;
+    [SerializeField] private float stalkApproachAcceleration = 18f;
+    [Tooltip("When ticked, it approaches the player once, watches, then loses interest and roams on. " +
+             "Untick for repeated approaches during one interest period.")]
+    [SerializeField] private bool singleApproachPerInterest = true;
 
     [Header("Jumpscare")]
     [Tooltip("Minimum / maximum time between two jumpscares.")]
@@ -90,11 +100,12 @@ public class Test_InteractiveSoundScript : MonoBehaviour
 
     [Header("Vanishing (disables the GameObject)")]
     [Tooltip("Chance (per roll) that it disables itself for a moment.")]
-    [SerializeField, Range(0f, 1f)] private float vanishChance = 0.3f;
-    [SerializeField] private Vector2 vanishRollInterval = new Vector2(20f, 45f);
-    [SerializeField] private Vector2 vanishDuration = new Vector2(1f, 6f);
+    [SerializeField, Range(0f, 1f)] private float vanishChance = 0.4f;
+    [SerializeField] private Vector2 vanishRollInterval = new Vector2(25f, 50f);
+    [Tooltip("How long it stays gone (disabled and silent).")]
+    [SerializeField] private Vector2 vanishDuration = new Vector2(20f, 45f);
     [Tooltip("Chance that it comes back at a different place instead of where it vanished.")]
-    [SerializeField, Range(0f, 1f)] private float relocateOnReturnChance = 0.3f;
+    [SerializeField, Range(0f, 1f)] private float relocateOnReturnChance = 0.6f;
 
     [Header("Light Flicker")]
     [SerializeField] private string lightTag = "Light";
@@ -111,6 +122,8 @@ public class Test_InteractiveSoundScript : MonoBehaviour
 
     [Header("Debug")]
     [SerializeField] private bool drawGizmos = true;
+    [Tooltip("Logs spawning, vanishing, returning and approaching the player.")]
+    [SerializeField] private bool logBehaviour = true;
 
     // ---------------------------------------------------------
     // STATE
@@ -175,6 +188,40 @@ public class Test_InteractiveSoundScript : MonoBehaviour
         }
 
         ResolveNavMeshSurface();
+
+        // Start hidden; Start() (patrol setup + brain) only runs once it appears.
+        if (spawnDelay.y > 0f)
+        {
+            float delay = RandomIn(spawnDelay);
+            Log("Hidden at start. Appears in " + delay.ToString("0.0") + " s.");
+            EnsureVanishTimer().StartCoroutine(SpawnRoutine(delay));
+            gameObject.SetActive(false);
+        }
+    }
+
+    private static VanishTimer EnsureVanishTimer()
+    {
+        if (vanishTimer == null)
+        {
+            vanishTimer = new GameObject("[Presence Vanish Timer]").AddComponent<VanishTimer>();
+        }
+
+        return vanishTimer;
+    }
+
+    private IEnumerator SpawnRoutine(float delay)
+    {
+        yield return new WaitForSeconds(delay);
+
+        if (this == null) yield break; // destroyed while hidden (e.g. scene change)
+
+        Log("Appeared.");
+        gameObject.SetActive(true);
+    }
+
+    private void Log(string message)
+    {
+        if (logBehaviour) Debug.Log("[Presence] " + name + ": " + message, this);
     }
 
     /// <summary>
@@ -384,14 +431,12 @@ public class Test_InteractiveSoundScript : MonoBehaviour
     {
         if (!gameObject.activeInHierarchy) return;
 
-        if (vanishTimer == null)
-        {
-            vanishTimer = new GameObject("[Presence Vanish Timer]").AddComponent<VanishTimer>();
-        }
+        EnsureVanishTimer();
 
         bool relocate = patrolPoints.Count > 0 && Random.value < relocateOnReturnChance;
         Vector3 returnPosition = relocate ? patrolPoints[Random.Range(0, patrolPoints.Count)] : transform.position;
 
+        Log("Vanishing for " + duration.ToString("0.0") + " s" + (relocate ? " (will return somewhere else)." : "."));
         vanishTimer.StartCoroutine(VanishRoutine(duration, relocate, returnPosition));
     }
 
@@ -408,6 +453,7 @@ public class Test_InteractiveSoundScript : MonoBehaviour
             transform.position = returnPosition + Vector3.up * agent.baseOffset;
         }
 
+        Log("Returned.");
         gameObject.SetActive(true);
     }
 
@@ -434,6 +480,35 @@ public class Test_InteractiveSoundScript : MonoBehaviour
 
             yield return null;
         }
+    }
+
+    // Right-click the component header > "Apply Calm Roaming Preset".
+    // Scene objects keep their saved Inspector values, so changed code defaults alone don't reach them.
+    [ContextMenu("Apply Calm Roaming Preset")]
+    private void ApplyCalmRoamingPreset()
+    {
+#if UNITY_EDITOR
+        UnityEditor.Undo.RecordObject(this, "Apply Calm Roaming Preset");
+#endif
+        spawnDelay = new Vector2(5f, 10f);
+
+        vanishChance = 0.4f;
+        vanishRollInterval = new Vector2(25f, 50f);
+        vanishDuration = new Vector2(20f, 45f);
+        relocateOnReturnChance = 0.6f;
+
+        playerInterestChance = 0.25f;
+        playerInterestRollInterval = new Vector2(30f, 60f);
+        playerInterestDuration = new Vector2(8f, 15f);
+        stalkDistance = new Vector2(4f, 8f);
+        stalkWatchDuration = new Vector2(1f, 3f);
+        stalkApproachSpeed = 6f;
+        stalkApproachAcceleration = 18f;
+        singleApproachPerInterest = true;
+#if UNITY_EDITOR
+        UnityEditor.EditorUtility.SetDirty(this);
+#endif
+        Debug.Log("[Presence] " + name + ": Calm Roaming Preset applied.", this);
     }
 
     private IEnumerator PatrolLeg()
@@ -507,7 +582,13 @@ public class Test_InteractiveSoundScript : MonoBehaviour
         Vector3 around = player.position + RandomRing(stalkDistance.x, stalkDistance.y);
         if (TrySampleNavMesh(around, 2f, out Vector3 spot))
         {
-            yield return MoveTo(spot, 12f);
+            // It has decided to come closer: move fast.
+            Log("Approaching the player.");
+            agent.speed = stalkApproachSpeed;
+            agent.acceleration = stalkApproachAcceleration;
+            agent.angularSpeed = walkAngularSpeed * 2f;
+            yield return MoveTo(spot, 12f, keepSpeed: true);
+            ApplyWalkSettings();
             if (jumpscareRequested) yield break;
         }
 
@@ -527,6 +608,14 @@ public class Test_InteractiveSoundScript : MonoBehaviour
         }
         agent.updateRotation = true;
         agent.isStopped = false;
+
+        // Don't hang around the player: one look, then back to roaming the house.
+        if (singleApproachPerInterest)
+        {
+            playerInterested = false;
+            nextPlayerInterestRoll = Time.time + RandomIn(playerInterestRollInterval);
+            Log("Lost interest in the player.");
+        }
     }
 
     private IEnumerator Jumpscare()
