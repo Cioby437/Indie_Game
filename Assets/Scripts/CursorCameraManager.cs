@@ -13,8 +13,6 @@ public class CursorCameraManager : MonoBehaviour
     [Header("Animation")]
     public AnimationScript animationScript;
 
-    public bool bed1Clicked = false;
-    public bool bed2Clicked = false;
 
     [Header("Casette Player")]
     public CasettePlayerInspect casettePlayerInspect;
@@ -25,6 +23,14 @@ public class CursorCameraManager : MonoBehaviour
 
     [Header("Dialogue")]
     public DialogueManager dialogueManager;
+
+    [Tooltip("When ticked, the cabinet drawer (C_Drawer_Cabinet_1) can also be clicked from the PlayerCamera. " +
+             "Off: clicking the drawer unit from the PlayerCamera always goes to the drawer camera first.")]
+    public bool cabinetClickableFromMainView = false;
+
+    [Tooltip("At start, the C_Drawer trigger is grown to cover the whole drawer unit (the AnimationScript's model), " +
+             "so a click anywhere on it from the PlayerCamera goes to the drawer camera.")]
+    public bool fitDrawerColliderToModel = true;
 
     [Tooltip("Animation State Name (in the AnimationScript) played in reverse when BTN_Back is pressed.")]
     public string drawerAnimationStateName = "WoodenTable_03_drawer01|WoodenTable_03_drawer01Action";
@@ -66,6 +72,11 @@ public class CursorCameraManager : MonoBehaviour
     private bool isHoveringBed1 = false;
     private bool isHoveringBed2 = false;
     private bool isHoveringCasettePlayer = false;
+    private bool isHoveringCassette = false;
+    private bool isHoveringInventoryCassette = false;
+    private ClickableAnimation hoveredAnimation;
+    private CassetteItem hoveredInventoryCassette;
+    private CassetteItem hoveredCassette;
     private bool isHoveringDoor = false;
     private bool isHoveringDrawer = false;
     private bool isHoveringDrawerCabinet1 = false;
@@ -79,7 +90,6 @@ public class CursorCameraManager : MonoBehaviour
 
     private CinemachineVirtualCamera windowCamera;
 
-    public event System.Action BedClicked;
 
     public void OnWindowButtonClicked()
     {
@@ -168,10 +178,6 @@ public class CursorCameraManager : MonoBehaviour
         {
             windowButton.gameObject.SetActive(true);
         }
-
-        bed1Clicked = true;
-
-        BedClicked?.Invoke();
     }
 
     private void ActivateBedCamera2()
@@ -187,10 +193,6 @@ public class CursorCameraManager : MonoBehaviour
         {
             windowButton.gameObject.SetActive(true);
         }
-
-        bed2Clicked = true;
-
-        BedClicked?.Invoke();
     }
 
     private void ActivateDrawerCamera()
@@ -334,6 +336,37 @@ public class CursorCameraManager : MonoBehaviour
         }
 
         // -------------------------------------------------
+        // INVENTORY CASSETTE (next to the held player):
+        // fan out the stack, or put the clicked one in
+        // -------------------------------------------------
+
+        if (isHoveringInventoryCassette)
+        {
+            CassetteItem clicked = hoveredInventoryCassette;
+
+            ClearHoverStates();
+            SetIdleCursor();
+
+            casettePlayerInspect.OnInventoryCassetteClicked(clicked);
+            return;
+        }
+
+        // -------------------------------------------------
+        // CASSETTE IN THE ROOM: pick it up
+        // -------------------------------------------------
+
+        if (isHoveringCassette)
+        {
+            CassetteItem cassette = hoveredCassette;
+
+            ClearHoverStates();
+            SetIdleCursor();
+
+            casettePlayerInspect.PickUpCassette(cassette);
+            return;
+        }
+
+        // -------------------------------------------------
         // C_CASETTE_PLAYER
         // -------------------------------------------------
 
@@ -343,6 +376,17 @@ public class CursorCameraManager : MonoBehaviour
             SetIdleCursor();
 
             casettePlayerInspect.Inspect();
+            return;
+        }
+
+        // -------------------------------------------------
+        // DRAWERS / DOORS WITH A ClickableAnimation: open / close
+        // -------------------------------------------------
+
+        if (hoveredAnimation != null)
+        {
+            ClickableAnimation part = hoveredAnimation;
+            part.Toggle();
             return;
         }
 
@@ -444,6 +488,57 @@ public class CursorCameraManager : MonoBehaviour
         if (TryPickClickHit(ray, out RaycastHit hit))
         {
             // -------------------------------------------------
+            // INVENTORY CASSETTE (next to the held player): rises while hovered
+            // -------------------------------------------------
+
+            CassetteItem inventoryCassette = casettePlayerInspect != null
+                ? casettePlayerInspect.InventoryCassetteFor(hit.collider)
+                : null;
+
+            if (inventoryCassette != null)
+            {
+                ClearHoverStates();
+
+                isHoveringInventoryCassette = true;
+                hoveredInventoryCassette = inventoryCassette;
+                casettePlayerInspect.NotifyInventoryCassetteHovered(inventoryCassette);
+
+                SetPointingCursor();
+
+                if (debugRay != null)
+                {
+                    debugRay.SetPosition(1, hit.point);
+                }
+
+                return;
+            }
+
+            // -------------------------------------------------
+            // CASSETTE (only while the Casette Player is held)
+            // -------------------------------------------------
+
+            CassetteItem cassette = hit.collider.GetComponentInParent<CassetteItem>();
+
+            if (cassette != null &&
+                casettePlayerInspect != null &&
+                casettePlayerInspect.CanPickUpCassette(cassette))
+            {
+                ClearHoverStates();
+
+                isHoveringCassette = true;
+                hoveredCassette = cassette;
+
+                SetPointingCursor();
+
+                if (debugRay != null)
+                {
+                    debugRay.SetPosition(1, hit.point);
+                }
+
+                return;
+            }
+
+            // -------------------------------------------------
             // C_CASETTE_PLAYER
             // -------------------------------------------------
 
@@ -454,6 +549,28 @@ public class CursorCameraManager : MonoBehaviour
                 ClearHoverStates();
 
                 isHoveringCasettePlayer = true;
+
+                SetPointingCursor();
+
+                if (debugRay != null)
+                {
+                    debugRay.SetPosition(1, hit.point);
+                }
+
+                return;
+            }
+
+            // -------------------------------------------------
+            // DRAWERS / DOORS WITH A ClickableAnimation
+            // -------------------------------------------------
+
+            ClickableAnimation part = hit.collider.GetComponentInParent<ClickableAnimation>();
+
+            if (part != null && CanClickAnimation(part))
+            {
+                ClearHoverStates();
+
+                hoveredAnimation = part;
 
                 SetPointingCursor();
 
@@ -527,10 +644,12 @@ public class CursorCameraManager : MonoBehaviour
             }
 
             // -------------------------------------------------
-            // C_DRAWER
+            // C_DRAWER (from the PlayerCamera, any part of the drawer unit counts as the drawer)
             // -------------------------------------------------
 
-            if (hit.collider.CompareTag("C_Drawer") &&
+            bool drawerUnitFromMainView = !IsAnyViewCameraActive() && IsPartOfDrawerUnit(hit.collider);
+
+            if ((hit.collider.CompareTag("C_Drawer") || drawerUnitFromMainView) &&
                 !IsCabinetCameraActive())
             {
                 ClearHoverStates();
@@ -607,10 +726,91 @@ public class CursorCameraManager : MonoBehaviour
         SetIdleCursor();
     }
 
-    // The cabinet drawer can be clicked from the main view (PlayerCamera) and from the drawer / cabinet views.
+    // The cabinet drawer can be clicked from the drawer / cabinet views
+    // (and from the PlayerCamera if "Cabinet Clickable From Main View" is ticked).
     private bool CanClickDrawerCabinet1()
     {
-        return IsDrawerOrCabinetCameraActive() || !IsAnyViewCameraActive();
+        return IsDrawerOrCabinetCameraActive() ||
+               (cabinetClickableFromMainView && !IsAnyViewCameraActive());
+    }
+
+    // A collider that belongs to the drawer unit: its drawers / door (ClickableAnimation), the cabinet drawer,
+    // or anything under the AnimationScript's model.
+    private bool IsPartOfDrawerUnit(Collider c)
+    {
+        if (c.GetComponentInParent<ClickableAnimation>() != null || c.CompareTag("C_Drawer_Cabinet_1"))
+        {
+            return true;
+        }
+
+        return animationScript != null &&
+               animationScript.animator != null &&
+               c.transform.IsChildOf(animationScript.animator.transform);
+    }
+
+    // Grows the C_Drawer trigger so it covers the whole drawer unit (closed), plus a small margin.
+    private void FitDrawerCollider()
+    {
+        if (!fitDrawerColliderToModel || animationScript == null || animationScript.animator == null)
+        {
+            return;
+        }
+
+        BoxCollider box = null;
+        foreach (GameObject go in GameObject.FindGameObjectsWithTag("C_Drawer"))
+        {
+            box = go.GetComponent<BoxCollider>();
+            if (box != null) break;
+        }
+
+        if (box == null)
+        {
+            return;
+        }
+
+        Bounds model = new Bounds();
+        bool hasBounds = false;
+
+        foreach (Renderer r in animationScript.animator.GetComponentsInChildren<Renderer>())
+        {
+            if (r.GetComponentInParent<CassetteItem>() != null) continue;
+            if (casettePlayerInspect != null && casettePlayerInspect.casettePlayer != null &&
+                r.transform.IsChildOf(casettePlayerInspect.casettePlayer.transform)) continue;
+
+            if (hasBounds) model.Encapsulate(r.bounds);
+            else { model = r.bounds; hasBounds = true; }
+        }
+
+        if (!hasBounds)
+        {
+            return;
+        }
+
+        model.Expand(0.04f);
+
+        // Box space (C_Drawer is world-aligned; this also works if it is rotated, using its corners).
+        Transform t = box.transform;
+        Bounds local = new Bounds(t.InverseTransformPoint(model.center), Vector3.zero);
+        Vector3 e = model.extents;
+
+        for (int i = 0; i < 8; i++)
+        {
+            Vector3 corner = model.center + new Vector3((i & 1) == 0 ? -e.x : e.x,
+                                                        (i & 2) == 0 ? -e.y : e.y,
+                                                        (i & 4) == 0 ? -e.z : e.z);
+            local.Encapsulate(t.InverseTransformPoint(corner));
+        }
+
+        // Keep what the box already covered, add the model.
+        local.Encapsulate(new Bounds(box.center, box.size));
+
+        box.center = local.center;
+        box.size = local.size;
+
+        if (debugClicks)
+        {
+            Debug.Log("[Click] C_Drawer trigger grown to cover the whole drawer unit.", box);
+        }
     }
 
     // True while any of the close-up cameras has the priority, i.e. we are NOT looking through the PlayerCamera.
@@ -641,7 +841,7 @@ public class CursorCameraManager : MonoBehaviour
 
     private bool IsHoveringAnything()
     {
-        return isHoveringCasettePlayer || isHoveringDrawerCabinet1 || isHoveringWindow || isHoveringTV ||
+        return hoveredAnimation != null || isHoveringInventoryCassette || isHoveringCassette || isHoveringCasettePlayer || isHoveringDrawerCabinet1 || isHoveringWindow || isHoveringTV ||
                isHoveringDrawer || isHoveringDoor || isHoveringBed1 || isHoveringBed2;
     }
 
@@ -662,6 +862,8 @@ public class CursorCameraManager : MonoBehaviour
     // outside the C_Drawer box is in the way.
     private bool TryPickClickHit(Ray ray, out RaycastHit picked)
     {
+        Physics.SyncTransforms(); // objects held in front of the camera move without a Rigidbody
+
         RaycastHit[] hits = Physics.RaycastAll(
             ray,
             raycastDistance,
@@ -680,7 +882,7 @@ public class CursorCameraManager : MonoBehaviour
 
         picked = hits[0];
 
-        if (!hits[0].collider.CompareTag("C_Drawer") || !CanClickDrawerCabinet1())
+        if (!hits[0].collider.CompareTag("C_Drawer"))
         {
             return true;
         }
@@ -691,7 +893,7 @@ public class CursorCameraManager : MonoBehaviour
         {
             Collider other = hits[i].collider;
 
-            if (other.CompareTag("C_Drawer_Cabinet_1"))
+            if (IsClickableInsideDrawer(other))
             {
                 picked = hits[i];
                 return true;
@@ -707,6 +909,39 @@ public class CursorCameraManager : MonoBehaviour
         return true;
     }
 
+    private bool CanClickAnimation(ClickableAnimation part)
+    {
+        return !part.onlyFromDrawerViews || IsDrawerOrCabinetCameraActive();
+    }
+
+    // Things inside the C_Drawer box that should win over the box itself.
+    private bool IsClickableInsideDrawer(Collider other)
+    {
+        ClickableAnimation part = other.GetComponentInParent<ClickableAnimation>();
+        if (part != null && CanClickAnimation(part))
+        {
+            return true;
+        }
+
+        if (other.CompareTag("C_Drawer_Cabinet_1") && CanClickDrawerCabinet1())
+        {
+            return true;
+        }
+
+        if (casettePlayerInspect == null)
+        {
+            return false;
+        }
+
+        CassetteItem cassette = other.GetComponentInParent<CassetteItem>();
+        if (cassette != null)
+        {
+            return casettePlayerInspect.CanPickUpCassette(cassette);
+        }
+
+        return casettePlayerInspect.CanInspect && casettePlayerInspect.IsCasettePlayerCollider(other);
+    }
+
     // While clicks are locked the back button lets clicks through (to the also-locked scene),
     // so a double click can't press it right after it appears. No visual change.
     private void UpdateWindowButtonGuard()
@@ -719,6 +954,11 @@ public class CursorCameraManager : MonoBehaviour
 
     private void ClearHoverStates()
     {
+        isHoveringCassette = false;
+        isHoveringInventoryCassette = false;
+        hoveredInventoryCassette = null;
+        hoveredAnimation = null;
+        hoveredCassette = null;
         isHoveringWindow = false;
         isHoveringTV = false;
         isHoveringDrawer = false;
@@ -1046,6 +1286,9 @@ public class CursorCameraManager : MonoBehaviour
     // What the current click would hit, for the debug log.
     private string DescribeClickTarget()
     {
+        if (hoveredAnimation != null) return "Animated part " + hoveredAnimation.name + " (" + hoveredAnimation.animationName + ")";
+        if (isHoveringInventoryCassette) return "Inventory cassette " + (hoveredInventoryCassette != null ? hoveredInventoryCassette.name : "");
+        if (isHoveringCassette) return "Cassette " + (hoveredCassette != null ? hoveredCassette.name : "");
         if (isHoveringCasettePlayer) return "Casette Player";
         if (isHoveringDrawerCabinet1) return "Drawer Cabinet 1";
         if (isHoveringWindow) return "Window";
@@ -1079,6 +1322,16 @@ public class CursorCameraManager : MonoBehaviour
         // The Casette Player handles the mouse while it is being inspected.
         if (casettePlayerInspect != null && casettePlayerInspect.BlocksInput)
         {
+            // ...but the cursor still shows when its object can be clicked.
+            if (casettePlayerInspect.WantsPointingCursor)
+            {
+                SetPointingCursor();
+            }
+            else
+            {
+                SetIdleCursor();
+            }
+
             if (clicked)
             {
                 Debug.Log("[Click] Ignored: the Casette Player is being inspected (or this click puts it away).");
@@ -1206,6 +1459,8 @@ public class CursorCameraManager : MonoBehaviour
                 windowButtonGroup = windowButton.gameObject.AddComponent<CanvasGroup>();
             }
         }
+
+        FitDrawerCollider();
 
         CreateDebugRay();
     }

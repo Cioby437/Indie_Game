@@ -323,7 +323,7 @@ public class TVMiniDaw : MonoBehaviour
         onInserted.Invoke();
     }
 
-    // Switch to another puzzle, e.g. from the ScenarioManager.
+    // Switch to another puzzle (e.g. from another script).
     public void SetPuzzle(SecretLayerPuzzle newPuzzle)
     {
         puzzle = newPuzzle;

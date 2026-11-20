@@ -1,13 +1,20 @@
 using UnityEngine;
+using UnityEngine.Animations;
+using UnityEngine.Playables;
 using System.Collections;
-using System.Collections.Generic;
 
+// Plays open / close animations (e.g. every drawer and door of a cabinet) on one Animator.
+// Every clip runs on its own layer, so several can be open at the same time: each clip only moves its own part.
+// PlayAnimation(i): first call plays clip i forward (open), the next call plays it backward (close).
+//
+// The Animator's Animator Controller is not needed (it is ignored while playing).
 public class AnimationScript : MonoBehaviour
 {
     [System.Serializable]
     public class AnimationData
     {
         [Header("Animation")]
+        [Tooltip("Name used to find this animation from other scripts (usually the clip name).")]
         public string animationStateName;
         public AnimationClip animationClip;
 
@@ -30,6 +37,9 @@ public class AnimationScript : MonoBehaviour
     [Header("Animator")]
     public Animator animator;
 
+    private PlayableGraph graph;
+    private AnimationClipPlayable[] playables;
+
     private void Start()
     {
         if (animator == null)
@@ -39,36 +49,84 @@ public class AnimationScript : MonoBehaviour
 
         if (animator == null)
         {
-            Debug.LogWarning(
-                "AnimationScript: No Animator was assigned or found."
-            );
-
+            Debug.LogWarning("AnimationScript: No Animator was assigned or found.");
             return;
         }
 
-        // Put every animation at its starting position.
-        foreach (AnimationData animation in animations)
+        if (animations == null)
         {
-            if (animation == null ||
-                animation.animationClip == null ||
-                string.IsNullOrEmpty(animation.animationStateName))
+            animations = new AnimationData[0];
+        }
+
+        // The clips are driven from here, not from the Animator Controller.
+        animator.runtimeAnimatorController = null;
+        animator.applyRootMotion = false;
+
+        graph = PlayableGraph.Create(name + " AnimationScript");
+        graph.SetTimeUpdateMode(DirectorUpdateMode.GameTime);
+
+        AnimationLayerMixerPlayable mixer = AnimationLayerMixerPlayable.Create(graph, animations.Length);
+        playables = new AnimationClipPlayable[animations.Length];
+
+        for (int i = 0; i < animations.Length; i++)
+        {
+            AnimationData animation = animations[i];
+            if (animation == null || animation.animationClip == null)
             {
                 continue;
             }
 
+            AnimationClipPlayable playable = AnimationClipPlayable.Create(graph, animation.animationClip);
+            playable.SetApplyFootIK(false);
+            playable.Pause(); // time is set by hand
+            playable.SetTime(0);
+
+            graph.Connect(playable, 0, mixer, i);
+            mixer.SetInputWeight(i, 1f);
+
+            playables[i] = playable;
+
+            // Every animation starts at its first frame (closed).
             animation.isOpen = false;
             animation.isPlaying = false;
-
-            animator.speed = 0f;
-
-            animator.Play(
-                animation.animationStateName,
-                0,
-                0f
-            );
-
-            animator.Update(0f);
         }
+
+        AnimationPlayableOutput output = AnimationPlayableOutput.Create(graph, "Animation", animator);
+        output.SetSourcePlayable(mixer);
+
+        graph.Play();
+        graph.Evaluate();
+    }
+
+    private void OnDestroy()
+    {
+        if (graph.IsValid())
+        {
+            graph.Destroy();
+        }
+    }
+
+    // Index of the animation with this name (animationStateName or clip name), -1 if none.
+    public int IndexOf(string animationName)
+    {
+        if (animations == null || string.IsNullOrEmpty(animationName))
+        {
+            return -1;
+        }
+
+        for (int i = 0; i < animations.Length; i++)
+        {
+            AnimationData a = animations[i];
+            if (a == null) continue;
+
+            if (a.animationStateName == animationName ||
+                (a.animationClip != null && a.animationClip.name == animationName))
+            {
+                return i;
+            }
+        }
+
+        return -1;
     }
 
     public void PlayAnimation(int animationIndex)
@@ -77,160 +135,57 @@ public class AnimationScript : MonoBehaviour
             animationIndex < 0 ||
             animationIndex >= animations.Length)
         {
-            Debug.LogWarning(
-                "AnimationScript: Invalid animation index."
-            );
-
+            Debug.LogWarning("AnimationScript: Invalid animation index.");
             return;
         }
 
         AnimationData animation = animations[animationIndex];
 
-        if (animation == null)
+        if (animation == null || animation.isPlaying)
         {
             return;
         }
 
-        if (animation.isPlaying)
+        if (playables == null || !playables[animationIndex].IsValid())
         {
+            Debug.LogWarning("AnimationScript: Animation " + animationIndex + " has no clip (or no Animator).");
             return;
         }
 
-        if (animator == null)
-        {
-            Debug.LogWarning(
-                "AnimationScript: Animator is not assigned."
-            );
-
-            return;
-        }
-
-        if (animation.animationClip == null)
-        {
-            Debug.LogWarning(
-                "AnimationScript: Animation Clip is not assigned."
-            );
-
-            return;
-        }
-
-        if (string.IsNullOrEmpty(animation.animationStateName))
-        {
-            Debug.LogWarning(
-                "AnimationScript: Animation State Name is not assigned."
-            );
-
-            return;
-        }
-
-        // Stop any existing animation.
-        if (animation.animationCoroutine != null)
-        {
-            StopCoroutine(animation.animationCoroutine);
-        }
-
-        // First click = forward.
-        // Second click = reverse.
+        // First call = forward (open). Next call = backward (close).
         if (!animation.isOpen)
         {
-            animation.animationCoroutine =
-                StartCoroutine(
-                    PlayForward(animation)
-                );
+            animation.animationCoroutine = StartCoroutine(Play(animationIndex, true));
         }
         else if (animation.canReverse)
         {
-            animation.animationCoroutine =
-                StartCoroutine(
-                    PlayBackward(animation)
-                );
+            animation.animationCoroutine = StartCoroutine(Play(animationIndex, false));
         }
     }
 
-    private IEnumerator PlayForward(AnimationData animation)
+    private IEnumerator Play(int index, bool forward)
     {
+        AnimationData animation = animations[index];
+        AnimationClipPlayable playable = playables[index];
+
         animation.isPlaying = true;
 
-        animator.speed = 0f;
-
-        float elapsed = 0f;
         float duration = animation.animationClip.length;
+        float elapsed = 0f;
 
         while (elapsed < duration)
         {
             elapsed += Time.deltaTime;
 
-            float normalizedTime =
-                Mathf.Clamp01(elapsed / duration);
-
-            animator.Play(
-                animation.animationStateName,
-                0,
-                normalizedTime
-            );
-
-            animator.Update(0f);
+            float t = Mathf.Clamp01(elapsed / duration);
+            playable.SetTime((forward ? t : 1f - t) * duration);
 
             yield return null;
         }
 
-        // Make absolutely sure we end at frame 18 / 100%.
-        animator.Play(
-            animation.animationStateName,
-            0,
-            1f
-        );
+        playable.SetTime(forward ? duration : 0f);
 
-        animator.Update(0f);
-
-        animator.speed = 0f;
-
-        animation.isOpen = true;
-        animation.isPlaying = false;
-        animation.animationCoroutine = null;
-    }
-
-    private IEnumerator PlayBackward(AnimationData animation)
-    {
-        animation.isPlaying = true;
-
-        animator.speed = 0f;
-
-        float elapsed = 0f;
-        float duration = animation.animationClip.length;
-
-        while (elapsed < duration)
-        {
-            elapsed += Time.deltaTime;
-
-            float normalizedTime =
-                Mathf.Clamp01(
-                    1f - (elapsed / duration)
-                );
-
-            animator.Play(
-                animation.animationStateName,
-                0,
-                normalizedTime
-            );
-
-            animator.Update(0f);
-
-            yield return null;
-        }
-
-        // Return to frame 0.
-        animator.Play(
-            animation.animationStateName,
-            0,
-            0f
-        );
-
-        animator.Update(0f);
-
-        animator.speed = 0f;
-
-        animation.isOpen = false;
+        animation.isOpen = forward;
         animation.isPlaying = false;
         animation.animationCoroutine = null;
     }
@@ -257,22 +212,5 @@ public class AnimationScript : MonoBehaviour
         }
 
         return animations[animationIndex].isOpen;
-    }
-
-    private void OnDestroy()
-    {
-        if (animations == null)
-        {
-            return;
-        }
-
-        foreach (AnimationData animation in animations)
-        {
-            if (animation != null &&
-                animation.animationCoroutine != null)
-            {
-                StopCoroutine(animation.animationCoroutine);
-            }
-        }
     }
 }
