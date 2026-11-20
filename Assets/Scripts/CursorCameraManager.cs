@@ -46,6 +46,14 @@ public class CursorCameraManager : MonoBehaviour
     [Tooltip("Logs every click: what it hit and why it was ignored. Turn off when everything works.")]
     public bool debugClicks = true;
 
+    [Header("Click Guard")]
+    [Tooltip("After a click on something clickable (or on the back button), every further click is ignored " +
+             "for at least this many seconds, and for as long as the camera is still blending. " +
+             "Stops fast double clicks from registering twice.")]
+    public float clickCooldown = 0.4f;
+    private CinemachineBrain cinemachineBrain;
+    private CanvasGroup windowButtonGroup;
+
     [Header("UI")]
     public Button windowButton;
     private CinemachineVirtualCamera bedCamera1;
@@ -75,6 +83,20 @@ public class CursorCameraManager : MonoBehaviour
 
     public void OnWindowButtonClicked()
     {
+        // Only the first click of a fast double click counts.
+        if (IsClickLocked())
+        {
+            return;
+        }
+
+        LockClicks();
+
+        // Leaving while the Casette Player is being picked up puts it back (or lets it finish into the corner).
+        if (casettePlayerInspect != null)
+        {
+            casettePlayerInspect.OnBackPressed();
+        }
+
         // Leaving the TV ejects the cassette.
         if (tvMiniDaw != null && tvMiniDaw.IsOpen)
         {
@@ -290,9 +312,25 @@ public class CursorCameraManager : MonoBehaviour
             return;
         }
 
+        // Only the first click of a fast double click counts.
+        if (IsClickLocked())
+        {
+            if (debugClicks)
+            {
+                Debug.Log("[Click] Ignored: repeated click (click guard / camera still blending).");
+            }
+
+            return;
+        }
+
         if (debugClicks)
         {
             Debug.Log("[Click] Target: " + DescribeClickTarget());
+        }
+
+        if (IsHoveringAnything())
+        {
+            LockClicks();
         }
 
         // -------------------------------------------------
@@ -403,12 +441,7 @@ public class CursorCameraManager : MonoBehaviour
             );
         }
 
-        if (Physics.Raycast(
-            ray,
-            out RaycastHit hit,
-            raycastDistance,
-            Physics.DefaultRaycastLayers,
-            QueryTriggerInteraction.Collide))
+        if (TryPickClickHit(ray, out RaycastHit hit))
         {
             // -------------------------------------------------
             // C_CASETTE_PLAYER
@@ -436,7 +469,7 @@ public class CursorCameraManager : MonoBehaviour
             // C_DRAWER_CABINET_1
             // -------------------------------------------------
 
-            if (IsDrawerOrCabinetCameraActive() &&
+            if (CanClickDrawerCabinet1() &&
                 hit.collider.CompareTag("C_Drawer_Cabinet_1"))
             {
                 ClearHoverStates();
@@ -497,7 +530,8 @@ public class CursorCameraManager : MonoBehaviour
             // C_DRAWER
             // -------------------------------------------------
 
-            if (hit.collider.CompareTag("C_Drawer"))
+            if (hit.collider.CompareTag("C_Drawer") &&
+                !IsCabinetCameraActive())
             {
                 ClearHoverStates();
 
@@ -571,6 +605,116 @@ public class CursorCameraManager : MonoBehaviour
 
         ClearHoverStates();
         SetIdleCursor();
+    }
+
+    // The cabinet drawer can be clicked from the main view (PlayerCamera) and from the drawer / cabinet views.
+    private bool CanClickDrawerCabinet1()
+    {
+        return IsDrawerOrCabinetCameraActive() || !IsAnyViewCameraActive();
+    }
+
+    // True while any of the close-up cameras has the priority, i.e. we are NOT looking through the PlayerCamera.
+    private bool IsAnyViewCameraActive()
+    {
+        CinemachineVirtualCamera[] views =
+        {
+            windowCamera, tvCamera, drawerCamera, drawerCabinetCamera1,
+            doorCamera, outsideCamera, bedCamera1, bedCamera2
+        };
+
+        foreach (CinemachineVirtualCamera view in views)
+        {
+            if (view != null && view.Priority == activePriority)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private bool IsCabinetCameraActive()
+    {
+        return drawerCabinetCamera1 != null &&
+               drawerCabinetCamera1.Priority == activePriority;
+    }
+
+    private bool IsHoveringAnything()
+    {
+        return isHoveringCasettePlayer || isHoveringDrawerCabinet1 || isHoveringWindow || isHoveringTV ||
+               isHoveringDrawer || isHoveringDoor || isHoveringBed1 || isHoveringBed2;
+    }
+
+    private bool IsClickLocked()
+    {
+        return ClickGuard.IsLocked ||
+               (cinemachineBrain != null && cinemachineBrain.IsBlending);
+    }
+
+    private void LockClicks()
+    {
+        ClickGuard.Lock(clickCooldown);
+    }
+
+    // Normally the nearest hit wins. Exception: C_Drawer is a big trigger box around the whole drawer unit,
+    // so from the PlayerCamera it is always hit before the C_Drawer_Cabinet_1 trigger inside it.
+    // When the ray continues into C_Drawer_Cabinet_1, that one is used instead, unless something solid
+    // outside the C_Drawer box is in the way.
+    private bool TryPickClickHit(Ray ray, out RaycastHit picked)
+    {
+        RaycastHit[] hits = Physics.RaycastAll(
+            ray,
+            raycastDistance,
+            Physics.DefaultRaycastLayers,
+            QueryTriggerInteraction.Collide
+        );
+
+        picked = default;
+
+        if (hits.Length == 0)
+        {
+            return false;
+        }
+
+        System.Array.Sort(hits, (a, b) => a.distance.CompareTo(b.distance));
+
+        picked = hits[0];
+
+        if (!hits[0].collider.CompareTag("C_Drawer") || !CanClickDrawerCabinet1())
+        {
+            return true;
+        }
+
+        Bounds drawerBox = hits[0].collider.bounds;
+
+        for (int i = 1; i < hits.Length; i++)
+        {
+            Collider other = hits[i].collider;
+
+            if (other.CompareTag("C_Drawer_Cabinet_1"))
+            {
+                picked = hits[i];
+                return true;
+            }
+
+            // Something solid outside the drawer box hides the cabinet.
+            if (!other.isTrigger && !drawerBox.Contains(hits[i].point))
+            {
+                break;
+            }
+        }
+
+        return true;
+    }
+
+    // While clicks are locked the back button lets clicks through (to the also-locked scene),
+    // so a double click can't press it right after it appears. No visual change.
+    private void UpdateWindowButtonGuard()
+    {
+        if (windowButtonGroup != null)
+        {
+            windowButtonGroup.blocksRaycasts = !IsClickLocked();
+        }
     }
 
     private void ClearHoverStates()
@@ -928,6 +1072,8 @@ public class CursorCameraManager : MonoBehaviour
 
     private void LateUpdate()
     {
+        UpdateWindowButtonGuard();
+
         bool clicked = debugClicks && Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame;
 
         // The Casette Player handles the mouse while it is being inspected.
@@ -1044,6 +1190,23 @@ public class CursorCameraManager : MonoBehaviour
             windowButton.onClick.AddListener(OnWindowButtonClicked);
         }
 
+        cinemachineBrain = mainCamera != null ? mainCamera.GetComponent<CinemachineBrain>() : null;
+
+        if (cinemachineBrain == null)
+        {
+            cinemachineBrain = FindFirstObjectByType<CinemachineBrain>();
+        }
+
+        if (windowButton != null)
+        {
+            windowButtonGroup = windowButton.GetComponent<CanvasGroup>();
+
+            if (windowButtonGroup == null)
+            {
+                windowButtonGroup = windowButton.gameObject.AddComponent<CanvasGroup>();
+            }
+        }
+
         CreateDebugRay();
     }
 
@@ -1060,17 +1223,25 @@ public class CursorCameraManager : MonoBehaviour
 
         if (!cabinetIsActive)
         {
-            if (animationScript != null)
+            // Open it, unless it is already open.
+            if (animationScript != null && !animationScript.IsAnimationOpen(0))
             {
                 animationScript.PlayAnimation(0);
             }
 
             drawerCamera.Priority = inactivePriority;
             drawerCabinetCamera1.Priority = activePriority;
+
+            // Also reachable straight from the PlayerCamera, so make sure the back button is there.
+            if (windowButton != null)
+            {
+                windowButton.gameObject.SetActive(true);
+            }
         }
         else
         {
-            if (animationScript != null)
+            // Close it, unless it is already closed.
+            if (animationScript != null && animationScript.IsAnimationOpen(0))
             {
                 animationScript.PlayAnimation(0);
             }

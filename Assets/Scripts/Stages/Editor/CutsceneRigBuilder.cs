@@ -208,20 +208,6 @@ public static class CutsceneRigBuilder
             notes.Add("Canvas_Blinking (the old EyelidBlink) is switched off: the cutscene's eyes replace it.");
         }
 
-        List<GameObject> roaming = new List<GameObject>();
-        foreach (Test_InteractiveSoundScript s in Object.FindObjectsByType<Test_InteractiveSoundScript>(
-                     FindObjectsInactive.Include, FindObjectsSortMode.None))
-        {
-            Undo.RecordObject(s.gameObject, "Build Cutscene Rig");
-            s.gameObject.SetActive(false);
-            roaming.Add(s.gameObject);
-        }
-        if (roaming.Count > 0)
-        {
-            gameplay.activateOnEnter = roaming.ToArray();
-            notes.Add(roaming.Count + " roaming sound(s) (e.g. S_Interactive_4) start disabled and appear when the Gameplay Loop starts.");
-        }
-
         if (cutscene.brain == null)
         {
             notes.Add("WARNING: no CinemachineBrain found. Assign Brain on Stage_Cutscene.");

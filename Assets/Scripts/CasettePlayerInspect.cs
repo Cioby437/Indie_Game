@@ -2,6 +2,7 @@ using System.Collections;
 using Cinemachine;
 using UnityEngine;
 using UnityEngine.Animations;
+using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 using UnityEngine.Playables;
 using UnityEngine.Rendering;
@@ -64,6 +65,16 @@ public class CasettePlayerInspect : MonoBehaviour
     private PlayableGraph insertGraph;
     private int lastClickAwayFrame = -1;
     private Transform pivot;
+
+    // Where the Casette Player sits in the room, so the back button can put it back.
+    private Transform originalParent;
+    private Vector3 originalPosition;
+    private Quaternion originalRotation;
+
+    // Set once "Insert" starts: from then on the pick-up can't be undone.
+    private bool committed;
+    // Back was pressed after the pick-up was committed: skip the blur wait at the end.
+    private bool leaveRequested;
     private State state = State.Idle;
     private enum State
     {
@@ -72,6 +83,9 @@ public class CasettePlayerInspect : MonoBehaviour
         Waiting,    // in the corner, blur on, waiting for a click away
         Held        // in the corner, blur off
     }
+
+    // Clicks right after an accepted click are ignored for this long (see ClickGuard).
+    private const float ClickLockSeconds = 0.4f;
 
     // CursorCameraManager ignores mouse input while this is true,
     // including on the frame the player clicked away.
@@ -110,7 +124,79 @@ public class CasettePlayerInspect : MonoBehaviour
             return;
         }
 
+        originalParent = casettePlayer.transform.parent;
+        originalPosition = casettePlayer.transform.position;
+        originalRotation = casettePlayer.transform.rotation;
+        committed = false;
+        leaveRequested = false;
+
         StartCoroutine(InspectRoutine());
+    }
+
+    // Called by CursorCameraManager when the back button is pressed.
+    //   Before "Insert": the pick-up is cancelled and the Casette Player flies back to its place.
+    //   During "Insert" / the move to the corner: it finishes, then is held without the blur.
+    //   Waiting in the corner: the blur goes off, it stays held.
+    public void OnBackPressed()
+    {
+        if (state == State.Inspecting && !committed)
+        {
+            StopAllCoroutines(); // the inspect routine and its moves
+            blurFadeRoutine = null;
+            StartCoroutine(ReturnRoutine());
+            return;
+        }
+
+        if (state == State.Inspecting)
+        {
+            leaveRequested = true;
+            return;
+        }
+
+        if (state == State.Waiting)
+        {
+            state = State.Held;
+            StartBlurFade(0f);
+        }
+    }
+
+    private IEnumerator ReturnRoutine()
+    {
+        StartBlurFade(0f);
+
+        // Detach from the camera so it doesn't follow the view any more.
+        pivot.SetParent(null, true);
+
+        // Pivot pose that puts the Casette Player exactly back where it was.
+        Transform player = casettePlayer.transform;
+        Quaternion toRotation = originalRotation * Quaternion.Inverse(player.localRotation);
+        Vector3 toPosition = originalPosition - toRotation * Vector3.Scale(pivot.lossyScale, player.localPosition);
+
+        Vector3 fromPosition = pivot.position;
+        Quaternion fromRotation = pivot.rotation;
+        float elapsed = 0f;
+
+        while (elapsed < moveInDuration)
+        {
+            elapsed += Time.deltaTime;
+
+            float t = EaseInOut(elapsed / moveInDuration);
+
+            pivot.SetPositionAndRotation(
+                Vector3.Lerp(fromPosition, toPosition, t),
+                Quaternion.Slerp(fromRotation, toRotation, t)
+            );
+
+            yield return null;
+        }
+
+        player.SetParent(originalParent, true);
+        player.SetPositionAndRotation(originalPosition, originalRotation);
+
+        Destroy(pivot.gameObject);
+        pivot = null;
+
+        state = State.Idle;
     }
 
     public bool IsCasettePlayerCollider(Collider collider)
@@ -263,6 +349,7 @@ public class CasettePlayerInspect : MonoBehaviour
 
         while (Mouse.current == null ||
                !Mouse.current.leftButton.wasPressedThisFrame ||
+               ClickGuard.IsLocked ||
                !PointerIsOverCasettePlayer())
         {
             UpdateRotation(facingRotation);
@@ -270,9 +357,14 @@ public class CasettePlayerInspect : MonoBehaviour
             yield return null;
         }
 
+        // Only the first click of a fast double click counts.
+        ClickGuard.Lock(ClickLockSeconds);
+
         // =========================================================
         // STEP 3 - PLAY "INSERT" (it keeps following the cursor meanwhile)
         // =========================================================
+
+        committed = true;
 
         if (animator != null && insertClip != null)
         {
@@ -321,6 +413,14 @@ public class CasettePlayerInspect : MonoBehaviour
                 moveToCornerDuration
             )
         );
+
+        if (leaveRequested)
+        {
+            // Back was pressed on the way: just hold it, no blur.
+            state = State.Held;
+            StartBlurFade(0f);
+            yield break;
+        }
 
         // The blur stays on until the player clicks away (see Update).
         state = State.Waiting;
@@ -473,12 +573,18 @@ public class CasettePlayerInspect : MonoBehaviour
         }
 
         if (Mouse.current.leftButton.wasPressedThisFrame &&
+            !ClickGuard.IsLocked &&
             !PointerIsOverCasettePlayer())
         {
             lastClickAwayFrame = Time.frameCount;
             state = State.Held;
-
             StartBlurFade(0f);
+
+            // A click away onto the back button must still reach the button.
+            if (EventSystem.current == null || !EventSystem.current.IsPointerOverGameObject())
+            {
+                ClickGuard.Lock(ClickLockSeconds);
+            }
         }
     }
 
