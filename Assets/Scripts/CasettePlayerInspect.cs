@@ -67,9 +67,11 @@ public class CasettePlayerInspect : MonoBehaviour
     private Transform pivot;
 
     // Where the Casette Player sits in the room, so the back button can put it back.
+    // Stored relative to its parent (the drawer), which may move (close) while it flies back.
     private Transform originalParent;
-    private Vector3 originalPosition;
-    private Quaternion originalRotation;
+    private Vector3 originalLocalPosition;
+    private Quaternion originalLocalRotation;
+    private Vector3 originalLocalScale;
 
     // Set once "Insert" starts: from then on the pick-up can't be undone.
     private bool committed;
@@ -125,8 +127,9 @@ public class CasettePlayerInspect : MonoBehaviour
         }
 
         originalParent = casettePlayer.transform.parent;
-        originalPosition = casettePlayer.transform.position;
-        originalRotation = casettePlayer.transform.rotation;
+        originalLocalPosition = casettePlayer.transform.localPosition;
+        originalLocalRotation = casettePlayer.transform.localRotation;
+        originalLocalScale = casettePlayer.transform.localScale;
         committed = false;
         leaveRequested = false;
 
@@ -160,6 +163,21 @@ public class CasettePlayerInspect : MonoBehaviour
         }
     }
 
+    // Pivot pose that puts the Casette Player at its original place in the drawer, as the drawer is right now.
+    private void GetReturnPivotPose(Transform player, out Vector3 position, out Quaternion rotation)
+    {
+        Vector3 worldPosition = originalParent != null
+            ? originalParent.TransformPoint(originalLocalPosition)
+            : originalLocalPosition;
+
+        Quaternion worldRotation = originalParent != null
+            ? originalParent.rotation * originalLocalRotation
+            : originalLocalRotation;
+
+        rotation = worldRotation * Quaternion.Inverse(player.localRotation);
+        position = worldPosition - rotation * Vector3.Scale(pivot.lossyScale, player.localPosition);
+    }
+
     private IEnumerator ReturnRoutine()
     {
         StartBlurFade(0f);
@@ -167,11 +185,7 @@ public class CasettePlayerInspect : MonoBehaviour
         // Detach from the camera so it doesn't follow the view any more.
         pivot.SetParent(null, true);
 
-        // Pivot pose that puts the Casette Player exactly back where it was.
         Transform player = casettePlayer.transform;
-        Quaternion toRotation = originalRotation * Quaternion.Inverse(player.localRotation);
-        Vector3 toPosition = originalPosition - toRotation * Vector3.Scale(pivot.lossyScale, player.localPosition);
-
         Vector3 fromPosition = pivot.position;
         Quaternion fromRotation = pivot.rotation;
         float elapsed = 0f;
@@ -182,6 +196,9 @@ public class CasettePlayerInspect : MonoBehaviour
 
             float t = EaseInOut(elapsed / moveInDuration);
 
+            // Target is re-read every frame, so it follows the drawer while it closes.
+            GetReturnPivotPose(player, out Vector3 toPosition, out Quaternion toRotation);
+
             pivot.SetPositionAndRotation(
                 Vector3.Lerp(fromPosition, toPosition, t),
                 Quaternion.Slerp(fromRotation, toRotation, t)
@@ -190,8 +207,11 @@ public class CasettePlayerInspect : MonoBehaviour
             yield return null;
         }
 
-        player.SetParent(originalParent, true);
-        player.SetPositionAndRotation(originalPosition, originalRotation);
+        // Back in the drawer, exactly where it was.
+        player.SetParent(originalParent, false);
+        player.localPosition = originalLocalPosition;
+        player.localRotation = originalLocalRotation;
+        player.localScale = originalLocalScale;
 
         Destroy(pivot.gameObject);
         pivot = null;
