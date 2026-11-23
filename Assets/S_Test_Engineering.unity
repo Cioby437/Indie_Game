@@ -3612,7 +3612,6 @@ GameObject:
   m_Component:
   - component: {fileID: 153944637}
   - component: {fileID: 153944638}
-  - component: {fileID: 153944640}
   - component: {fileID: 153944641}
   - component: {fileID: 153944642}
   - component: {fileID: 153944643}
@@ -3654,6 +3653,7 @@ MonoBehaviour:
   activePriority: 10
   animationScript: {fileID: 153944641}
   casettePlayerInspect: {fileID: 153944644}
+  objectInspector: {fileID: 0}
   cinemachineCameras:
   - {fileID: 1977073283}
   - {fileID: 1132711721}
@@ -3665,7 +3665,6 @@ MonoBehaviour:
   - {fileID: 1259718823}
   - {fileID: 1887021434}
   debugRayWidth: 0.01
-  dialogueManager: {fileID: 153944640}
   cabinetClickableFromMainView: 0
   fitDrawerColliderToModel: 1
   drawerAnimationStateName: WoodenTable_03_drawer01|WoodenTable_03_drawer01Action
@@ -3679,44 +3678,6 @@ MonoBehaviour:
   clickCooldown: 0.4
   windowButton: {fileID: 1158922197}
   mainCamera: {fileID: 380975498}
---- !u!114 &153944640
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 153944635}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 05b82acc06cd6084f9f89388617ab9ad, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: '::'
-  FMOD_Event_Emitter_TV: {fileID: 1615044946}
-  VO_Loop: {fileID: 750208107}
-  characterDelay: 0.03
-  dialogueCanvas: {fileID: 1483859020}
-  dialogueObjects:
-  - {fileID: 1587696104}
-  - {fileID: 1498344576}
-  - {fileID: 1896906883}
-  - {fileID: 1535010784}
-  - {fileID: 898870437}
-  - {fileID: 328435023}
-  - {fileID: 1135397424}
-  - {fileID: 2117207609}
-  - {fileID: 1930077589}
-  - {fileID: 27928754}
-  - {fileID: 702715951}
-  - {fileID: 884420693}
-  - {fileID: 325855197}
-  - {fileID: 1551377946}
-  - {fileID: 120854812}
-  - {fileID: 729413471}
-  - {fileID: 1172162737}
-  - {fileID: 758135334}
-  - {fileID: 1395113384}
-  - {fileID: 127091732}
-  dialoguePanel: {fileID: 1960854825}
 --- !u!114 &153944641
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3786,8 +3747,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b6545c3173fea0145afa90e0dfabbfca, type: 3}
   m_Name: 
   m_EditorClassIdentifier: '::'
-  FMOD_Event1: {fileID: 750208107}
-  FMOD_Event2: {fileID: 1615044946}
+  FMOD_Event1: {fileID: 0}
   TV_Screen: {fileID: 0}
   TV_Startup: {fileID: 2144987596}
   maxSparkDuration: 0.04
@@ -3840,9 +3800,12 @@ MonoBehaviour:
   cassetteCounterNumber: {fileID: 0}
   cassetteCounterFormat: '{0}'
   showCounterOnlyAfterPickup: 1
+  showCassetteCounter: 0
   hoverRiseDistance: 0.015
   hoverRiseSpeed: 12
   ejectKey: 19
+  playCassettePrompt: {fileID: 0}
+  playCassettePromptText: Play Cassette
 --- !u!1 &154233500
 GameObject:
   m_ObjectHideFlags: 0
@@ -10582,7 +10545,7 @@ Transform:
   m_GameObject: {fileID: 289375685}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -2.478, y: 1.192, z: -0.018}
+  m_LocalPosition: {x: -2.478, y: 1.65, z: -0.33}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -13325,7 +13288,7 @@ MonoBehaviour:
   m_LookAt: {fileID: 0}
   m_Follow: {fileID: 0}
   m_Lens:
-    FieldOfView: 60.000004
+    FieldOfView: 64.66037
     OrthographicSize: 10
     NearClipPlane: 0.1
     FarClipPlane: 5000
@@ -13359,7 +13322,7 @@ Transform:
   m_GameObject: {fileID: 436662500}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0.624, y: 1.518, z: 0.289}
+  m_LocalPosition: {x: -0.486, y: 1.656, z: 0.378}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -22507,7 +22470,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 657821760}
-  - component: {fileID: 657821761}
   m_Layer: 0
   m_Name: Casette_Player_Root
   m_TagString: Untagged
@@ -22533,22 +22495,6 @@ Transform:
   - {fileID: 1742658049}
   m_Father: {fileID: 1764472299}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &657821761
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 657821759}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e166ea64c1cbeb441a8929bbb140044d, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Recorder_Script
-  maxRecordSeconds: 30
-  playbackEmitter: {fileID: 1742658050}
-  recorderBank: Recorder
-  recorderHolder: {fileID: 0}
 --- !u!4 &660272881 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 4c04fe3f8fd4d3c4db5fbd9edb524d24, type: 3}
@@ -23561,7 +23507,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Cinemachine::Cinemachine.CinemachinePOV
   m_RecenterTarget: 0
   m_VerticalAxis:
-    Value: 10
+    Value: 11.2
     m_SpeedMode: 1
     m_MaxSpeed: 0.1
     m_AccelTime: 0.6
@@ -23569,8 +23515,8 @@ MonoBehaviour:
     m_InputAxisName: Mouse Y
     m_InputAxisValue: 0
     m_InvertInput: 1
-    m_MinValue: -20
-    m_MaxValue: 20
+    m_MinValue: 11.2
+    m_MaxValue: 11.2
     m_Wrap: 0
     m_Recentering:
       m_enabled: 0
@@ -23593,8 +23539,8 @@ MonoBehaviour:
     m_InputAxisName: Mouse X
     m_InputAxisValue: 0
     m_InvertInput: 0
-    m_MinValue: 20
-    m_MaxValue: 120
+    m_MinValue: 76.2
+    m_MaxValue: 76.2
     m_Wrap: 0
     m_Recentering:
       m_enabled: 0
@@ -23728,69 +23674,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ac0b09e7857660247b1477e93731de29, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Cinemachine::Cinemachine.CinemachinePipeline
---- !u!1 &750208107
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 750208108}
-  - component: {fileID: 750208109}
-  m_Layer: 0
-  m_Name: FMOD_Event_1
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 0
---- !u!4 &750208108
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 750208107}
-  serializedVersion: 2
-  m_LocalRotation: {x: -0.44496432, y: 0.5495515, z: 0.5495515, w: 0.44496432}
-  m_LocalPosition: {x: -0.12300006, y: 0.16700007, z: 0.11699986}
-  m_LocalScale: {x: 539.00433, y: 482.68698, z: 38.628746}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 958352805}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &750208109
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 750208107}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9a6610d2e704f1648819acc8d7460285, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: FMODUnity::FMODUnity.StudioEventEmitter
-  CollisionTag: 
-  EventReference:
-    Guid:
-      Data1: -957058781
-      Data2: 1141544142
-      Data3: 1561098168
-      Data4: 1313151878
-    Path: event:/One-Shots/VO_Attract
-  Event: 
-  EventPlayTrigger: 11
-  EventStopTrigger: 12
-  AllowFadeout: 1
-  TriggerOnce: 0
-  Preload: 0
-  NonRigidbodyVelocity: 0
-  Params: []
-  OverrideAttenuation: 0
-  OverrideMinDistance: 1
-  OverrideMaxDistance: 20
 --- !u!1 &754945102
 GameObject:
   m_ObjectHideFlags: 0
@@ -32634,6 +32517,10 @@ PrefabInstance:
       value: 18
       objectReference: {fileID: 0}
     - target: {fileID: 6797207039135718605, guid: fef6bfa97553cd14fb0258f9e208232e, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6797207039135718605, guid: fef6bfa97553cd14fb0258f9e208232e, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 16
       objectReference: {fileID: 0}
@@ -32858,12 +32745,6 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 5925916000308158198, guid: fef6bfa97553cd14fb0258f9e208232e, type: 3}
       insertIndex: -1
       addedObject: {fileID: 28974636}
-    - targetCorrespondingSourceObject: {fileID: 5925916000308158198, guid: fef6bfa97553cd14fb0258f9e208232e, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 750208108}
-    - targetCorrespondingSourceObject: {fileID: 5925916000308158198, guid: fef6bfa97553cd14fb0258f9e208232e, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 1615044947}
     - targetCorrespondingSourceObject: {fileID: 5925916000308158198, guid: fef6bfa97553cd14fb0258f9e208232e, type: 3}
       insertIndex: -1
       addedObject: {fileID: 2144987597}
@@ -40786,6 +40667,15 @@ MonoBehaviour:
   insertClip: {fileID: -623603649343465320, guid: 680e9cfdc38e0a04bafdd953dbc0fe36, type: 3}
   ejectClip: {fileID: -1609281748187839663, guid: 680e9cfdc38e0a04bafdd953dbc0fe36, type: 3}
   cassetteId: Cassette_01
+  recording:
+    Guid:
+      Data1: 200723572
+      Data2: 1081078891
+      Data3: 523660198
+      Data4: -752986719
+    Path: event:/Interactive/S_Interactive_VoiceLine_1
+  fallbackRecordingPath: event:/Interactive/S_Interactive_VoiceLine_1
+  puzzle: {fileID: 11400000, guid: 974d51689d842da41b2c174c07ac0439, type: 2}
   inspectRotation: {x: 0, y: 0, z: 0}
   animatedChildName: portable_cassette_player_casette
 --- !u!95 &1479807170
@@ -43727,69 +43617,6 @@ Light:
   m_LightUnit: 0
   m_LuxAtDistance: 1
   m_EnableSpotReflector: 1
---- !u!1 &1615044946
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1615044947}
-  - component: {fileID: 1615044948}
-  m_Layer: 0
-  m_Name: FMOD_Event_2
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 0
---- !u!4 &1615044947
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1615044946}
-  serializedVersion: 2
-  m_LocalRotation: {x: -0.44496432, y: 0.5495515, z: 0.5495515, w: 0.44496432}
-  m_LocalPosition: {x: -0.12300006, y: 0.16700007, z: 0.11699986}
-  m_LocalScale: {x: 539.00433, y: 482.68698, z: 38.628746}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 958352805}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1615044948
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1615044946}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9a6610d2e704f1648819acc8d7460285, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: FMODUnity::FMODUnity.StudioEventEmitter
-  CollisionTag: 
-  EventReference:
-    Guid:
-      Data1: -1508234696
-      Data2: 1167726063
-      Data3: 1651905214
-      Data4: -82306167
-    Path: event:/Interactive/VO_Instructions
-  Event: 
-  EventPlayTrigger: 11
-  EventStopTrigger: 12
-  AllowFadeout: 1
-  TriggerOnce: 0
-  Preload: 0
-  NonRigidbodyVelocity: 0
-  Params: []
-  OverrideAttenuation: 0
-  OverrideMinDistance: 1
-  OverrideMaxDistance: 20
 --- !u!1 &1617862139
 GameObject:
   m_ObjectHideFlags: 0
@@ -44573,6 +44400,15 @@ MonoBehaviour:
   insertClip: {fileID: -623603649343465320, guid: 680e9cfdc38e0a04bafdd953dbc0fe36, type: 3}
   ejectClip: {fileID: -1609281748187839663, guid: 680e9cfdc38e0a04bafdd953dbc0fe36, type: 3}
   cassetteId: Cassette_01
+  recording:
+    Guid:
+      Data1: 0
+      Data2: 0
+      Data3: 0
+      Data4: 0
+    Path: 
+  fallbackRecordingPath: event:/Interactive/S_Interactive_VoiceLine_1
+  puzzle: {fileID: 0}
   inspectRotation: {x: 0, y: 0, z: 0}
   animatedChildName: portable_cassette_player_casette
 --- !u!95 &1713035359
@@ -44908,7 +44744,6 @@ GameObject:
   - component: {fileID: 1742658053}
   - component: {fileID: 1742658052}
   - component: {fileID: 1742658051}
-  - component: {fileID: 1742658050}
   m_Layer: 0
   m_Name: Recorder_PlayBack
   m_TagString: Untagged
@@ -44931,37 +44766,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 657821760}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1742658050
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1742658048}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9a6610d2e704f1648819acc8d7460285, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: FMODUnity::FMODUnity.StudioEventEmitter
-  CollisionTag: 
-  EventReference:
-    Guid:
-      Data1: -1837898393
-      Data2: 1240940755
-      Data3: 1382787988
-      Data4: -1619708915
-    Path: event:/Interactive/Scriptable_1
-  Event: 
-  EventPlayTrigger: 11
-  EventStopTrigger: 12
-  AllowFadeout: 1
-  TriggerOnce: 0
-  Preload: 0
-  NonRigidbodyVelocity: 0
-  Params: []
-  OverrideAttenuation: 0
-  OverrideMinDistance: 1
-  OverrideMaxDistance: 20
 --- !u!65 &1742658051
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -49586,52 +49390,61 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: abbafe2fb9d542e4f86c68f1e286a5f2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TVMiniDaw
+  casettePlayerInspect: {fileID: 153944644}
+  raycastCamera: {fileID: 380975498}
+  loop: 1
+  puzzle: {fileID: 11400000, guid: 974d51689d842da41b2c174c07ac0439, type: 2}
+  revealFadeSpeed: 3
+  dawScreen: {fileID: 885311330}
+  screenTextureProperty: _UnlitColorMap
+  textureWidth: 512
+  textureHeight: 256
+  invertHorizontal: 0
+  invertVertical: 0
+  notchParameter: NotchFreq
+  startNotchValue: 0.41
+  notchDisplayMinHz: 44
+  notchDisplayMaxHz: 14000
+  notchDisplayLogarithmic: 0
+  notchDisplayStep: 10
+  pitchParameter: Pitch
+  pitchDisplayMin: -12
+  pitchDisplayMax: 12
+  pitchStep: 1
+  startPitch: 0
+  transportHeight: 30
+  readoutHeight: 22
+  readoutTextScale: 2
   backgroundColor:
     serializedVersion: 2
     rgba: 4278849028
-  casettePlayerInspect: {fileID: 153944644}
-  dawScreen: {fileID: 885311330}
   screenOffColor:
     serializedVersion: 2
     rgba: 4278190080
-  dialogueManager: {fileID: 153944640}
-  invertHorizontal: 0
-  invertVertical: 0
-  keyboardSpeed: 0.25
-  maxHz: 20000
-  minHz: 20
-  notchColor:
-    serializedVersion: 2
-    rgba: 4282173695
-  notchParameter: NotchFreq
-  onEjected:
-    m_PersistentCalls:
-      m_Calls: []
-  onInserted:
-    m_PersistentCalls:
-      m_Calls: []
-  onSolved:
-    m_PersistentCalls:
-      m_Calls: []
-  pitchColor:
-    serializedVersion: 2
-    rgba: 4294942800
-  pitchParameter: Pitch
-  pitchRangeSemitones: 12
-  puzzle: {fileID: 11400000, guid: 974d51689d842da41b2c174c07ac0439, type: 2}
-  raycastCamera: {fileID: 380975498}
-  recorder: {fileID: 657821761}
-  requireDialogueFinished: 1
-  revealFadeSpeed: 3
-  screenTextureProperty: _UnlitColorMap
   spectrumColor:
     serializedVersion: 2
     rgba: 4288741210
-  textureHeight: 256
-  textureWidth: 512
   waveformColor:
     serializedVersion: 2
     rgba: 4282145310
+  notchColor:
+    serializedVersion: 2
+    rgba: 4282173695
+  pitchColor:
+    serializedVersion: 2
+    rgba: 4294942800
+  panelColor:
+    serializedVersion: 2
+    rgba: 4278585346
+  textColor:
+    serializedVersion: 2
+    rgba: 4290707350
+  sliderTrackColor:
+    serializedVersion: 2
+    rgba: 4281484830
+  sliderFillColor:
+    serializedVersion: 2
+    rgba: 4288741210
   closeWaveformColor:
     serializedVersion: 2
     rgba: 4279507430
@@ -49643,6 +49456,34 @@ MonoBehaviour:
   maxRowTearPixels: 60
   maxSnowAmount: 0.55
   staticParameter: 
+  solvedOneShot:
+    Guid:
+      Data1: 1627295687
+      Data2: 1096159360
+      Data3: -256574279
+      Data4: -791583936
+    Path: event:/One-Shots/OneShot_5
+  solvedOneShotPath: event:/One-Shots/OneShot_5
+  solvedMessage: LOOK AWAY
+  solvedMessageColor:
+    serializedVersion: 2
+    rgba: 4294967295
+  solvedMessageScale: 8
+  solvedMessageSeconds: 0
+  turnOffWithTV:
+  - {fileID: 28974635}
+  - {fileID: 2144987596}
+  onInserted:
+    m_PersistentCalls:
+      m_Calls: []
+  onEjected:
+    m_PersistentCalls:
+      m_Calls: []
+  onSolved:
+    m_PersistentCalls:
+      m_Calls: []
+  keyRepeatDelay: 0.35
+  keyRepeatInterval: 0.04
 --- !u!1001 &2003071059
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -49819,37 +49660,13 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents:
-    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 850dc6a24936ad4498174da2f1eda8c4, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 2012967700}
+    m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 850dc6a24936ad4498174da2f1eda8c4, type: 3}
---- !u!1 &2012967691 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: 850dc6a24936ad4498174da2f1eda8c4, type: 3}
-  m_PrefabInstance: {fileID: 2012967690}
-  m_PrefabAsset: {fileID: 0}
 --- !u!4 &2012967696 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 850dc6a24936ad4498174da2f1eda8c4, type: 3}
   m_PrefabInstance: {fileID: 2012967690}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &2012967700
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2012967691}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e166ea64c1cbeb441a8929bbb140044d, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Recorder_Script
-  maxRecordSeconds: 30
-  playbackEmitter: {fileID: 1742658050}
-  recorderBank: Recorder
-  recorderHolder: {fileID: 0}
 --- !u!1 &2027764994
 GameObject:
   m_ObjectHideFlags: 0
@@ -52094,6 +51911,118 @@ MonoBehaviour:
   OverrideAttenuation: 0
   OverrideMinDistance: 1
   OverrideMaxDistance: 20
+--- !u!23 &1307916779886896565
+MeshRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1447636599742535491}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_DynamicOccludee: 1
+  m_StaticShadowCaster: 0
+  m_MotionVectors: 1
+  m_LightProbeUsage: 1
+  m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
+  m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
+  m_RenderingLayerMask: 1
+  m_RendererPriority: 0
+  m_Materials:
+  - {fileID: 2100000, guid: 9abf70e273251a04b859e585cadfe10a, type: 2}
+  m_StaticBatchInfo:
+    firstSubMesh: 0
+    subMeshCount: 0
+  m_StaticBatchRoot: {fileID: 0}
+  m_ProbeAnchor: {fileID: 0}
+  m_LightProbeVolumeOverride: {fileID: 0}
+  m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
+  m_PreserveUVs: 0
+  m_IgnoreNormalsForChartDetection: 0
+  m_ImportantGI: 0
+  m_StitchLightmapSeams: 1
+  m_SelectedEditorRenderState: 3
+  m_MinimumChartSize: 4
+  m_AutoUVMaxDistance: 0.5
+  m_AutoUVMaxAngle: 89
+  m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_MaskInteraction: 0
+  m_AdditionalVertexStreams: {fileID: 0}
+--- !u!1 &1447636599742535491
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 3328722912796521073}
+  - component: {fileID: 8113632557351659202}
+  - component: {fileID: 1307916779886896565}
+  - component: {fileID: 8113632557351659203}
+  m_Layer: 0
+  m_Name: OfficeNotePad
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &3328722912796521073
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1447636599742535491}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0.6905586, y: -0.096517846, z: 0.09922214, w: 0.70990705}
+  m_LocalPosition: {x: -2.3771, y: 1.2159, z: 0.947}
+  m_LocalScale: {x: 75.60046, y: 75.60044, z: 75.60045}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 88.417, y: 0, z: 15.913}
+--- !u!33 &8113632557351659202
+MeshFilter:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1447636599742535491}
+  m_Mesh: {fileID: 6761901475337433938, guid: 747b27c9ec976314b8de27dd5c317456, type: 3}
+--- !u!65 &8113632557351659203
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1447636599742535491}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 0.0022333777, y: 0.0030734, z: 0.00010000019}
+  m_Center: {x: 1.3271346e-12, y: -2.142042e-12, z: 0.00005}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
@@ -52137,3 +52066,4 @@ SceneRoots:
   - {fileID: 885311334}
   - {fileID: 1347437223}
   - {fileID: 1075265166}
+  - {fileID: 3328722912796521073}

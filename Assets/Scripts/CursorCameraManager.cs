@@ -17,12 +17,14 @@ public class CursorCameraManager : MonoBehaviour
     [Header("Casette Player")]
     public CasettePlayerInspect casettePlayerInspect;
 
+    [Header("Inspectable Objects")]
+    [Tooltip("Picks up and shows objects with an InspectableObject (e.g. the office notepad). " +
+             "Empty = found in the scene, or created at start.")]
+    public ObjectInspector objectInspector;
+
     [Header("Cinemachine Cameras")]
     public CinemachineVirtualCamera[] cinemachineCameras;
     public float debugRayWidth = 0.01f;
-
-    [Header("Dialogue")]
-    public DialogueManager dialogueManager;
 
     [Tooltip("When ticked, the cabinet drawer (C_Drawer_Cabinet_1) can also be clicked from the PlayerCamera. " +
              "Off: clicking the drawer unit from the PlayerCamera always goes to the drawer camera first.")]
@@ -45,8 +47,8 @@ public class CursorCameraManager : MonoBehaviour
     public bool showDebugRay = true;
 
     [Header("TV Mini DAW")]
-    [Tooltip("Clicking the TV (while its camera is active) with the recorder in hand and a recording on it " +
-             "inserts the cassette and opens the mini DAW.")]
+    [Tooltip("Clicking the TV (while its camera is active) with the cassette player in hand and a heard cassette " +
+             "in it puts the cassette in the TV and opens the mini DAW.")]
     public TVMiniDaw tvMiniDaw;
 
     [Tooltip("Logs every click: what it hit and why it was ignored. Turn off when everything works.")]
@@ -72,6 +74,8 @@ public class CursorCameraManager : MonoBehaviour
     private bool isHoveringBed1 = false;
     private bool isHoveringBed2 = false;
     private bool isHoveringCasettePlayer = false;
+    private bool isHoveringHeldPlayer = false;
+    private InspectableObject hoveredInspectable;
     private bool isHoveringCassette = false;
     private bool isHoveringInventoryCassette = false;
     private ClickableAnimation hoveredAnimation;
@@ -105,6 +109,12 @@ public class CursorCameraManager : MonoBehaviour
         if (casettePlayerInspect != null)
         {
             casettePlayerInspect.OnBackPressed();
+        }
+
+        // An object being looked at goes back to its place.
+        if (objectInspector != null)
+        {
+            objectInspector.OnBackPressed();
         }
 
         // Leaving the TV ejects the cassette.
@@ -250,8 +260,7 @@ public class CursorCameraManager : MonoBehaviour
 
         // Insert the cassette: the mini DAW takes over the TV.
         if (tvMiniDaw != null &&
-            tvMiniDaw.CanInsert &&
-            (dialogueManager == null || !dialogueManager.IsDialogueActive))
+            tvMiniDaw.CanInsert)
         {
             ClearHoverStates();
             SetIdleCursor();
@@ -263,15 +272,6 @@ public class CursorCameraManager : MonoBehaviour
         if (tvMiniDaw != null && tvMiniDaw.InsertBlocker != null)
         {
             Debug.Log("TV Mini DAW: cassette not inserted because " + tvMiniDaw.InsertBlocker);
-        }
-        else if (tvMiniDaw != null && dialogueManager != null && dialogueManager.IsDialogueActive)
-        {
-            Debug.Log("TV Mini DAW: cassette not inserted because the TV dialogue is playing. Click through it first.");
-        }
-
-        if (dialogueManager != null)
-        {
-            dialogueManager.HandleTVClick();
         }
     }
 
@@ -348,6 +348,34 @@ public class CursorCameraManager : MonoBehaviour
             SetIdleCursor();
 
             casettePlayerInspect.OnInventoryCassetteClicked(clicked);
+            return;
+        }
+
+        // -------------------------------------------------
+        // HELD CASETTE PLAYER (with a cassette in it): play / stop the recording
+        // -------------------------------------------------
+
+        if (isHoveringHeldPlayer)
+        {
+            ClearHoverStates();
+            SetIdleCursor();
+
+            casettePlayerInspect.ToggleCassettePlayback();
+            return;
+        }
+
+        // -------------------------------------------------
+        // INSPECTABLE OBJECT (e.g. the notepad): pick it up and look at it
+        // -------------------------------------------------
+
+        if (hoveredInspectable != null)
+        {
+            InspectableObject inspectable = hoveredInspectable;
+
+            ClearHoverStates();
+            SetIdleCursor();
+
+            objectInspector.Inspect(inspectable);
             return;
         }
 
@@ -502,6 +530,53 @@ public class CursorCameraManager : MonoBehaviour
                 isHoveringInventoryCassette = true;
                 hoveredInventoryCassette = inventoryCassette;
                 casettePlayerInspect.NotifyInventoryCassetteHovered(inventoryCassette);
+
+                SetPointingCursor();
+
+                if (debugRay != null)
+                {
+                    debugRay.SetPosition(1, hit.point);
+                }
+
+                return;
+            }
+
+            // -------------------------------------------------
+            // HELD CASETTE PLAYER with a cassette in it (click = play / stop)
+            // -------------------------------------------------
+
+            if (casettePlayerInspect != null &&
+                casettePlayerInspect.CanPlayCassette &&
+                casettePlayerInspect.IsHeldPlayerCollider(hit.collider))
+            {
+                ClearHoverStates();
+
+                isHoveringHeldPlayer = true;
+                casettePlayerInspect.NotifyHeldPlayerHovered();
+
+                SetPointingCursor();
+
+                if (debugRay != null)
+                {
+                    debugRay.SetPosition(1, hit.point);
+                }
+
+                return;
+            }
+
+            // -------------------------------------------------
+            // INSPECTABLE OBJECT (e.g. the notepad)
+            // -------------------------------------------------
+
+            InspectableObject inspectable = hit.collider.GetComponentInParent<InspectableObject>();
+
+            if (inspectable != null &&
+                objectInspector != null &&
+                objectInspector.CanInspect(inspectable))
+            {
+                ClearHoverStates();
+
+                hoveredInspectable = inspectable;
 
                 SetPointingCursor();
 
@@ -841,7 +916,7 @@ public class CursorCameraManager : MonoBehaviour
 
     private bool IsHoveringAnything()
     {
-        return hoveredAnimation != null || isHoveringInventoryCassette || isHoveringCassette || isHoveringCasettePlayer || isHoveringDrawerCabinet1 || isHoveringWindow || isHoveringTV ||
+        return hoveredAnimation != null || hoveredInspectable != null || isHoveringInventoryCassette || isHoveringHeldPlayer || isHoveringCassette || isHoveringCasettePlayer || isHoveringDrawerCabinet1 || isHoveringWindow || isHoveringTV ||
                isHoveringDrawer || isHoveringDoor || isHoveringBed1 || isHoveringBed2;
     }
 
@@ -928,6 +1003,12 @@ public class CursorCameraManager : MonoBehaviour
             return true;
         }
 
+        InspectableObject inspectable = other.GetComponentInParent<InspectableObject>();
+        if (inspectable != null && objectInspector != null && objectInspector.CanInspect(inspectable))
+        {
+            return true;
+        }
+
         if (casettePlayerInspect == null)
         {
             return false;
@@ -964,6 +1045,8 @@ public class CursorCameraManager : MonoBehaviour
         isHoveringDrawer = false;
         isHoveringDrawerCabinet1 = false;
         isHoveringCasettePlayer = false;
+        isHoveringHeldPlayer = false;
+        hoveredInspectable = null;
         isHoveringDoor = false;
         isHoveringBed1 = false;
         isHoveringBed2 = false;
@@ -1290,6 +1373,8 @@ public class CursorCameraManager : MonoBehaviour
         if (isHoveringInventoryCassette) return "Inventory cassette " + (hoveredInventoryCassette != null ? hoveredInventoryCassette.name : "");
         if (isHoveringCassette) return "Cassette " + (hoveredCassette != null ? hoveredCassette.name : "");
         if (isHoveringCasettePlayer) return "Casette Player";
+        if (hoveredInspectable != null) return "Inspectable object " + hoveredInspectable.name;
+        if (isHoveringHeldPlayer) return "Held Casette Player (play / stop the cassette)";
         if (isHoveringDrawerCabinet1) return "Drawer Cabinet 1";
         if (isHoveringWindow) return "Window";
         if (isHoveringTV) return "TV";
@@ -1335,6 +1420,19 @@ public class CursorCameraManager : MonoBehaviour
             if (clicked)
             {
                 Debug.Log("[Click] Ignored: the Casette Player is being inspected (or this click puts it away).");
+            }
+
+            return;
+        }
+
+        // The inspector handles the mouse while an object (e.g. the notepad) is being looked at.
+        if (objectInspector != null && objectInspector.BlocksInput)
+        {
+            SetIdleCursor();
+
+            if (clicked)
+            {
+                Debug.Log("[Click] Handled by the Object Inspector (click outside the object to put it back).");
             }
 
             return;
@@ -1460,6 +1558,16 @@ public class CursorCameraManager : MonoBehaviour
             }
         }
 
+        if (objectInspector == null)
+        {
+            objectInspector = FindFirstObjectByType<ObjectInspector>();
+        }
+
+        if (objectInspector == null)
+        {
+            objectInspector = new GameObject("Object Inspector").AddComponent<ObjectInspector>();
+        }
+
         FitDrawerCollider();
 
         CreateDebugRay();
@@ -1505,4 +1613,4 @@ public class CursorCameraManager : MonoBehaviour
             drawerCamera.Priority = activePriority;
         }
     }
-}
+}

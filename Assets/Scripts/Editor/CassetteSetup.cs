@@ -8,8 +8,8 @@ using UnityEngine;
 //
 // Swaps the old combined Casette_Animated model for the separate exports in Assets/Objects/Cassette:
 //   - Cassette_Player.fbx (player + lid) goes where the old player was, inside a "Casette_Player_Root" object
-//     that takes over the old root's place, Recorder_Script, C_CasettePlayer collider and Recorder_PlayBack.
-//     Every reference to the old root / Recorder_Script is pointed at the new ones.
+//     that takes over the old root's place and C_CasettePlayer collider.
+//     Every reference to the old root is pointed at the new one.
 //   - One Cassette.fbx is placed next to it (where the cassette sits in Blender), with a CassetteItem,
 //     a click collider and its Insert / Eject clips. Duplicate it (Ctrl+D) for more cassettes.
 //   - The old Casette_Animated is switched off (not deleted), so you can compare and delete it yourself.

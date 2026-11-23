@@ -8,10 +8,6 @@ public class TV_StartUp_Script : MonoBehaviour
     [Tooltip("Loop event. Enabled after the third spark. Keep it disabled in the scene.")]
     public GameObject FMOD_Event1;
 
-    [Tooltip("Dialogue event. Played line by line by the DialogueManager " +
-             "(assign the same object to its FMOD_Event_Emitter_TV field).")]
-    public GameObject FMOD_Event2;
-
     [Header("TV Screen")]
     [Tooltip("Camera that renders the TV screen. Its GameObject flickers on with each spark " +
              "and stays on after the last one.")]
@@ -129,11 +125,6 @@ public class TV_StartUp_Script : MonoBehaviour
         if (FMOD_Event1 != null)
         {
             FMOD_Event1.SetActive(false);
-        }
-
-        if (FMOD_Event2 != null)
-        {
-            FMOD_Event2.SetActive(false);
         }
 
         if (startOnPlay)

@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using Cinemachine;
+using FMODUnity;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
@@ -28,6 +29,11 @@ using HDDepthOfFieldMode = UnityEngine.Rendering.HighDefinition.DepthOfFieldMode
 //   (both "Insert" clips), and the player, with the cassette inside, goes back to the bottom right.
 //   If another cassette was inside, it is ejected first and goes back into the inventory.
 //   "Eject Key" ejects the cassette that is inside (back into the inventory).
+//
+// PLAYING IT
+//   While the held player has a cassette in it, a "Play Cassette" prompt is shown. Clicking the held player
+//   plays the cassette's recording (S_Interactive_VoiceLine_1 by default) once; clicking again stops it.
+//   Once it has played to the end, the cassette counts as heard and can be used on the TV (TVMiniDaw).
 //
 // BACK BUTTON
 //   While the player is in front of the camera (before it is held): it goes back to the drawer.
@@ -123,6 +129,9 @@ public class CasettePlayerInspect : MonoBehaviour
     [Tooltip("The counter stays hidden until the first cassette is picked up.")]
     public bool showCounterOnlyAfterPickup = true;
 
+    [Tooltip("Off: the CassetteCounter UI is never shown.")]
+    public bool showCassetteCounter = false;
+
     [Tooltip("How far (metres, upwards on screen) the ready cassette rises while the cursor is over it.")]
     public float hoverRiseDistance = 0.015f;
 
@@ -131,6 +140,21 @@ public class CasettePlayerInspect : MonoBehaviour
 
     [Tooltip("Ejects the cassette that is inside. None = no key.")]
     public Key ejectKey = Key.E;
+
+    [Header("Playing The Cassette")]
+    [Tooltip("UI text shown while the cursor is over the held player, it has a cassette in it and isn't playing. " +
+             "Empty = a copy of the Pickup Message is made with the text below.")]
+    public GameObject playCassettePrompt;
+
+    [Tooltip("Text of the prompt when it is made from the Pickup Message.")]
+    public string playCassettePromptText = "Play Cassette";
+
+    private FMOD.Studio.EventInstance handPlayback;
+    private CassetteItem playingCassette;
+    private int handPlaybackLengthMs;
+    private bool heldHidden;
+    private bool promptSearched;
+    private int heldPlayerHoverFrame = -10;
 
     private Coroutine blurFadeRoutine;
     private VolumeProfile blurProfile;
@@ -355,12 +379,176 @@ public class CasettePlayerInspect : MonoBehaviour
 
     public void EjectCassette()
     {
-        if (state != State.Held || currentCassette == null)
+        if (state != State.Held || currentCassette == null || heldHidden)
         {
             return;
         }
 
+        StopCassette();
         StartCoroutine(EjectInCornerRoutine());
+    }
+
+    // ================================================================ PLAYING THE CASSETTE
+
+    // The held player has a cassette in it and is on screen, so a click on it plays / stops the recording.
+    public bool CanPlayCassette
+    {
+        get { return state == State.Held && currentCassette != null && !heldHidden; }
+    }
+
+    public bool IsPlayingCassette
+    {
+        get { return handPlayback.isValid(); }
+    }
+
+    // Any collider of the held player, the cassette inside it included.
+    public bool IsHeldPlayerCollider(Collider c)
+    {
+        return state == State.Held &&
+               casettePlayer != null &&
+               c != null &&
+               c.transform.IsChildOf(casettePlayer.transform);
+    }
+
+    // Called by CursorCameraManager every frame the cursor is over the held player.
+    public void NotifyHeldPlayerHovered()
+    {
+        heldPlayerHoverFrame = Time.frameCount;
+    }
+
+    // True while the cursor is over the held player (this frame or the last).
+    public bool IsHeldPlayerHovered
+    {
+        get { return Time.frameCount - heldPlayerHoverFrame <= 1; }
+    }
+
+    // Called by CursorCameraManager when the held player is clicked (only while the cursor is over it).
+    public void ToggleCassettePlayback()
+    {
+        if (!IsHeldPlayerHovered)
+        {
+            return;
+        }
+
+        if (IsPlayingCassette)
+        {
+            StopCassette();
+            return;
+        }
+
+        if (!CanPlayCassette)
+        {
+            return;
+        }
+
+        EventReference recording = currentCassette.GetRecording();
+
+        if (recording.IsNull)
+        {
+            Debug.LogWarning("CasettePlayerInspect: the cassette '" + currentCassette.name + "' has no recording to play.");
+            return;
+        }
+
+        handPlayback = RuntimeManager.CreateInstance(recording);
+        handPlayback.getDescription(out FMOD.Studio.EventDescription description);
+        description.getLength(out handPlaybackLengthMs);
+
+        // The sound comes from the player in the corner of the screen.
+        RuntimeManager.AttachInstanceToGameObject(handPlayback, pivot != null ? pivot.gameObject : casettePlayer);
+        handPlayback.start();
+        playingCassette = currentCassette;
+
+        Debug.Log("[Cassette] Playing '" + currentCassette.name + "' (" + (handPlaybackLengthMs / 1000f).ToString("0.0") + " s).");
+    }
+
+    // Stops the recording playing from the held player (e.g. before it goes into the TV).
+    public void StopCassette()
+    {
+        if (!handPlayback.isValid())
+        {
+            return;
+        }
+
+        RuntimeManager.DetachInstanceFromGameObject(handPlayback);
+        handPlayback.stop(FMOD.Studio.STOP_MODE.ALLOWFADEOUT);
+        handPlayback.release();
+        handPlayback.clearHandle();
+        playingCassette = null;
+    }
+
+    // Marks the cassette as heard when the recording reaches its end, then stops it.
+    private void UpdateHandPlayback()
+    {
+        if (!handPlayback.isValid())
+        {
+            return;
+        }
+
+        // The cassette was ejected / swapped in the meantime.
+        if (playingCassette == null || playingCassette != currentCassette)
+        {
+            StopCassette();
+            return;
+        }
+
+        handPlayback.getTimelinePosition(out int position);
+        if (handPlaybackLengthMs > 0 && position >= handPlaybackLengthMs - 50)
+        {
+            playingCassette.MarkHeard();
+        }
+
+        handPlayback.getPlaybackState(out FMOD.Studio.PLAYBACK_STATE playbackState);
+        if (playbackState != FMOD.Studio.PLAYBACK_STATE.STOPPED)
+        {
+            return;
+        }
+
+        // Reached the end: played once (it only loops on the TV).
+        playingCassette.MarkHeard();
+        StopCassette();
+    }
+
+    // "Play Cassette" is on screen while the cursor is over the held player, it has a cassette in it and nothing plays.
+    private void UpdatePlayPrompt()
+    {
+        if (playCassettePrompt == null && !promptSearched)
+        {
+            promptSearched = true;
+            CreatePlayPrompt();
+        }
+
+        if (playCassettePrompt == null)
+        {
+            return;
+        }
+
+        bool show = CanPlayCassette && !IsPlayingCassette && IsHeldPlayerHovered;
+
+        if (playCassettePrompt.activeSelf != show)
+        {
+            playCassettePrompt.SetActive(show);
+        }
+    }
+
+    // No prompt assigned: copy the pickup message (same look and canvas) and change its text.
+    private void CreatePlayPrompt()
+    {
+        if (pickupMessage == null)
+        {
+            Debug.LogWarning("CasettePlayerInspect: no Play Cassette Prompt (and no Pickup Message to copy it from) assigned.");
+            return;
+        }
+
+        playCassettePrompt = Instantiate(pickupMessage, pickupMessage.transform.parent);
+        playCassettePrompt.name = "PlayCassettePrompt";
+
+        TMP_Text text = playCassettePrompt.GetComponentInChildren<TMP_Text>(true);
+        if (text != null)
+        {
+            text.text = playCassettePromptText;
+        }
+
+        playCassettePrompt.SetActive(false);
     }
 
     private IEnumerator CassetteRoutine(CassetteItem cassette)
@@ -415,6 +603,7 @@ public class CasettePlayerInspect : MonoBehaviour
     private IEnumerator InsertRoutine(CassetteItem cassette, Transform itemPivot)
     {
         // ---- 3. the player and the cassette come in front of the camera
+        StopCassette();
         state = State.Busy;
         cassette.SetCollidersEnabled(false);
         focusTarget = pivot;
@@ -533,7 +722,7 @@ public class CasettePlayerInspect : MonoBehaviour
 
         if (cassetteCounter != null)
         {
-            cassetteCounter.SetActive(!showCounterOnlyAfterPickup || CollectedCount > 0);
+            cassetteCounter.SetActive(showCassetteCounter && (!showCounterOnlyAfterPickup || CollectedCount > 0));
         }
     }
 
@@ -700,6 +889,13 @@ public class CasettePlayerInspect : MonoBehaviour
     // Hides / shows the held Casette Player (e.g. while its cassette is inserted in the TV).
     public void SetHeldVisible(bool visible)
     {
+        heldHidden = !visible;
+
+        if (!visible)
+        {
+            StopCassette();
+        }
+
         if (state == State.Held && pivot != null)
         {
             pivot.gameObject.SetActive(visible);
@@ -953,6 +1149,8 @@ public class CasettePlayerInspect : MonoBehaviour
 
     private void OnDestroy()
     {
+        StopCassette();
+
         if (blurProfile != null)
         {
             Destroy(blurProfile);
@@ -1023,6 +1221,8 @@ public class CasettePlayerInspect : MonoBehaviour
         }
 
         UpdateInventoryLayout();
+        UpdateHandPlayback();
+        UpdatePlayPrompt();
 
         if (ejectKey != Key.None &&
             Keyboard.current != null &&

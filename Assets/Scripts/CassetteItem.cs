@@ -1,4 +1,5 @@
 using System.Collections;
+using FMODUnity;
 using UnityEngine;
 
 // A cassette that can go into the Casette Player (see CasettePlayerInspect, which drives the whole sequence).
@@ -16,8 +17,61 @@ public class CassetteItem : MonoBehaviour
     [Tooltip("Cassette.fbx > Eject (the cassette coming out of the player).")]
     public AnimationClip ejectClip;
 
-    [Tooltip("Optional name / id, e.g. for which recording this cassette holds.")]
+    [Tooltip("Optional name / id.")]
     public string cassetteId;
+
+    [Header("Recording On This Cassette")]
+    [Tooltip("FMOD event played when the cassette is in the held player and the player is clicked, " +
+             "and on the TV. Empty = the Fallback Recording Path below.")]
+    public EventReference recording;
+
+    [Tooltip("Used when Recording is empty.")]
+    public string fallbackRecordingPath = "event:/Interactive/S_Interactive_VoiceLine_1";
+
+    [Tooltip("Optional. The hidden-sound puzzle on the TV for this cassette. Empty = the TV's own puzzle.")]
+    public SecretLayerPuzzle puzzle;
+
+    private bool heard;
+
+    // True once the recording has been played to the end at least once (unlocks the TV).
+    public bool HasBeenHeard
+    {
+        get { return heard; }
+    }
+
+    public void MarkHeard()
+    {
+        if (!heard)
+        {
+            heard = true;
+            Debug.Log("[Cassette] " + name + ": recording heard, the TV can now use it.");
+        }
+    }
+
+    // The recording's event (the Recording field, or the fallback path). Null-event if neither works.
+    public EventReference GetRecording()
+    {
+        if (!recording.IsNull)
+        {
+            return recording;
+        }
+
+        if (string.IsNullOrEmpty(fallbackRecordingPath))
+        {
+            return default(EventReference);
+        }
+
+        try
+        {
+            return new EventReference { Guid = RuntimeManager.PathToGUID(fallbackRecordingPath) };
+        }
+        catch (System.Exception)
+        {
+            Debug.LogWarning(name + ": FMOD event '" + fallbackRecordingPath + "' not found. Is it assigned to a " +
+                             "bank in FMOD Studio and are the banks built?", this);
+            return default(EventReference);
+        }
+    }
 
     [Tooltip("Rotation of the cassette relative to the camera while it is held in front of it.")]
     public Vector3 inspectRotation = Vector3.zero;

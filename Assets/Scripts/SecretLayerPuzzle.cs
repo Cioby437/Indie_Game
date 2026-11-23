@@ -21,6 +21,27 @@ public class SecretLayerPuzzle : ScriptableObject
     [Tooltip("How long the player has to hold the exact match to solve it.")]
     public float holdToSolveSeconds = 1.5f;
 
+    [Tooltip("On: the TV's FREQUENCY and PITCH text must read exactly the targets (e.g. 1000 and 5). " +
+             "Off: the tolerance / fade settings below are used.")]
+    public bool exactMatch = true;
+
+    [Tooltip("Smoothing: seconds the hidden event's Reveal parameter takes to go all the way from 0 to 1. " +
+             "0 = use the TV's Reveal Fade Speed.")]
+    public float revealSeconds = 2f;
+
+    [Header("Getting Closer (Exact Match)")]
+    [Tooltip("The hidden sound starts to be heard within this many Hz (as shown on the TV) of the target frequency.")]
+    public float frequencyHearingRangeHz = 3000f;
+
+    [Tooltip("The hidden sound starts to be heard within this much pitch (as shown on the TV) of the target pitch.")]
+    public float pitchHearingRange = 8f;
+
+    [Tooltip("1 = volume grows evenly as the player gets closer. Higher = quiet until quite close, then rises fast.")]
+    public float closenessCurve = 1.5f;
+
+    [Tooltip("Reveal value just before the exact spot (the last bit up to 1 only comes on the exact readings).")]
+    [Range(0f, 1f)] public float maxRevealNearTarget = 0.85f;
+
     [Tooltip("All = frequency AND pitch must match. Any = either one is enough.")]
     public MatchMode matchMode = MatchMode.All;
     public float pitchFadeSemitones = 2f;
@@ -46,6 +67,18 @@ public class SecretLayerPuzzle : ScriptableObject
     {
         if (!useFrequency && !usePitch) return 0f;
 
+        if (exactMatch)
+        {
+            // The TV passes the values exactly as they read on screen (already rounded).
+            if (IsExactHit(notchHz, pitchSemitones))
+            {
+                return 1f;
+            }
+
+            // Not there yet: louder the closer the readings are.
+            return Mathf.Pow(Closeness(notchHz, pitchSemitones), Mathf.Max(0.01f, closenessCurve)) * maxRevealNearTarget;
+        }
+
         float f = useFrequency
             ? Score(Mathf.Abs(Mathf.Log(notchHz / targetFrequencyHz, 2f)), frequencyToleranceOctaves, frequencyFadeOctaves)
             : (matchMode == MatchMode.All ? 1f : 0f);
@@ -69,6 +102,11 @@ public class SecretLayerPuzzle : ScriptableObject
     {
         if (!useFrequency && !usePitch) return 0f;
 
+        if (exactMatch)
+        {
+            return IsExactHit(notchHz, pitchSemitones) ? 1f : Closeness(notchHz, pitchSemitones);
+        }
+
         float f = useFrequency
             ? Hint(Mathf.Abs(Mathf.Log(notchHz / targetFrequencyHz, 2f)), frequencyToleranceOctaves, frequencyHintOctaves)
             : 1f;
@@ -82,6 +120,34 @@ public class SecretLayerPuzzle : ScriptableObject
         }
 
         return (f + p) * 0.5f;
+    }
+
+    /// True when the TV's readings are exactly the targets.
+    public bool IsExactHit(float notchHz, float pitchSemitones)
+    {
+        bool fHit = Mathf.Abs(notchHz - targetFrequencyHz) < 0.5f;
+        bool pHit = Mathf.Abs(pitchSemitones - targetPitchSemitones) < 0.01f;
+
+        return matchMode == MatchMode.All
+            ? (!useFrequency || fHit) && (!usePitch || pHit)
+            : (useFrequency && fHit) || (usePitch && pHit);
+    }
+
+    /// 0 = outside the hearing range, 1 = on the target. Distance on the TV's graph, in its own units.
+    public float Closeness(float notchHz, float pitchSemitones)
+    {
+        float f = useFrequency && frequencyHearingRangeHz > 0f
+            ? Mathf.Abs(notchHz - targetFrequencyHz) / frequencyHearingRangeHz
+            : 0f;
+        float p = usePitch && pitchHearingRange > 0f
+            ? Mathf.Abs(pitchSemitones - targetPitchSemitones) / pitchHearingRange
+            : 0f;
+
+        float distance = matchMode == MatchMode.All
+            ? Mathf.Sqrt(f * f + p * p)            // both count
+            : Mathf.Min(useFrequency ? f : 1f, usePitch ? p : 1f); // the closer one counts
+
+        return 1f - Mathf.Clamp01(distance);
     }
 
     static float Hint(float distance, float tolerance, float range)
